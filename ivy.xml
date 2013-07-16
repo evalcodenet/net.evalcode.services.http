@@ -10,8 +10,8 @@
     <conf name="default" visibility="public"/>
   </configurations>
   <dependencies>
-    <dependency name="lib" rev="latest.integration"/>
-    <dependency name="manager" rev="latest.integration"/>
-    <dependency org="org.eclipse" name="osgi" rev="latest.integration"/>
+    <dependency name="lib" rev="latest.integration" conf="default"/>
+    <dependency name="manager" rev="latest.integration" conf="default"/>
+    <dependency org="org.eclipse" name="osgi" rev="latest.integration" conf="default"/>
   </dependencies>
 </ivy-module>
