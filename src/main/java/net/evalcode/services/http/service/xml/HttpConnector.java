@@ -37,6 +37,7 @@ public class HttpConnector
   static final String DEFAULT_KEYSTORE_PASSWORD="services";
   static final String DEFAULT_TRUSTSTORE="truststore";
   static final String DEFAULT_TRUSTSTORE_PASSWORD="services";
+  static final String DEFAULT_CERTIFICATE_ALIAS="localhost";
 
 
   // BASIC SETTINGS
@@ -68,6 +69,8 @@ public class HttpConnector
   String truststore=DEFAULT_TRUSTSTORE;
   @XmlElement(name="truststore_password")
   String truststorePassword=DEFAULT_TRUSTSTORE_PASSWORD;
+  @XmlElement(name="certificate_alias")
+  String certificateAlias=DEFAULT_CERTIFICATE_ALIAS;
 
 
   // MEMBERS
@@ -139,6 +142,11 @@ public class HttpConnector
     return truststorePassword;
   }
 
+  public String getCertificateAlias()
+  {
+    return certificateAlias;
+  }
+
 
   // OVERRIDES/IMPLEMENTS
   @Override
@@ -178,6 +186,10 @@ public class HttpConnector
       stringBuilder.append(String.format("truststore_password: %1$s, ", getTrustStorePassword()));
     else
       stringBuilder.append("truststore_password: *****, ");
+
+    stringBuilder.append(String.format("certificate_alias: %1$s, ",
+      String.valueOf(getCertificateAlias())
+    ));
 
     stringBuilder.append("}");
 

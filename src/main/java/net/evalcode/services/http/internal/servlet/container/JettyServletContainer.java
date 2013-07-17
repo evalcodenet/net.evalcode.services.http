@@ -47,12 +47,12 @@ public class JettyServletContainer implements ServletContainer
 
 
   // MEMBERS
-  private final Stage stage;
-  private final Server server;
-  private final HttpConnectors httpConnectors;
+  final Stage stage;
+  final Server server;
+  final HttpConnectors httpConnectors;
 
-  private final AtomicBoolean initialized=new AtomicBoolean(false);
-  private final Queue<HttpService> httpServices=new ConcurrentLinkedQueue<HttpService>();
+  final AtomicBoolean initialized=new AtomicBoolean(false);
+  final Queue<HttpService> httpServices=new ConcurrentLinkedQueue<>();
 
 
   // CONSTRUCTION
@@ -167,7 +167,7 @@ public class JettyServletContainer implements ServletContainer
     initialized.set(true);
   }
 
-  private SelectChannelConnector toSelectChannelConnector(final HttpConnector httpConnector)
+  private static SelectChannelConnector toSelectChannelConnector(final HttpConnector httpConnector)
   {
     final SelectChannelConnector selectChannelConnector=new SelectChannelConnector();
 
@@ -183,10 +183,11 @@ public class JettyServletContainer implements ServletContainer
     return selectChannelConnector;
   }
 
-  private Connector toSslSelectChannelConnector(final HttpConnector httpConnector)
+  private static Connector toSslSelectChannelConnector(final HttpConnector httpConnector)
   {
     final SslSelectChannelConnector sslSelectChannelConnector=new SslSelectChannelConnector();
 
+    LOG.info("ssl connector: {}", httpConnector);
     sslSelectChannelConnector.setHost(httpConnector.getHost());
     sslSelectChannelConnector.setPort(httpConnector.getPort());
 
@@ -194,6 +195,7 @@ public class JettyServletContainer implements ServletContainer
     sslSelectChannelConnector.getSslContextFactory().setKeyStorePassword(httpConnector.getKeyStorePassword());
     sslSelectChannelConnector.getSslContextFactory().setTrustStore(httpConnector.getTrustStore());
     sslSelectChannelConnector.getSslContextFactory().setTrustStorePassword(httpConnector.getTrustStorePassword());
+    sslSelectChannelConnector.getSslContextFactory().setCertAlias(httpConnector.getCertificateAlias());
 
     sslSelectChannelConnector.setAcceptors(httpConnector.getAcceptors());
 
