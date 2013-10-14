@@ -189,6 +189,7 @@
       <link href="http://mockito.googlecode.com/svn/branches/1.8.5/javadoc/"/>
       <link href="http://www.osgi.org/javadoc/r4v42/"/>
       <link href="http://www.slf4j.org/apidocs/"/>
+      <link href="http://services.evalcode.net/ci/job/net.evalcode.services.manager/javadoc/"/>
     </javadoc>
     <zip destfile="${dir.dist}/${file.dist.doc.zip}">
       <zipfileset dir="${dir.doc.3rdparty}" prefix="doc/3rdparty" excludes=".gitignore"/>

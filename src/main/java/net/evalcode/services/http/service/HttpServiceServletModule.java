@@ -20,6 +20,10 @@ import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
 import net.evalcode.services.manager.component.ComponentBundleInspector;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
+import net.evalcode.services.manager.management.logging.Log;
+import net.evalcode.services.manager.management.logging.impl.MethodInvocationLogger;
+import net.evalcode.services.manager.management.statistics.Count;
+import net.evalcode.services.manager.management.statistics.impl.MethodInvocationCounter;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -94,6 +98,12 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .toProvider(EntityManagerProvider.class)
       .in(ServletScopes.REQUEST);
 
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Log.class),
+      new MethodInvocationLogger());
+
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Count.class),
+      new MethodInvocationCounter());
+
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class),
       new TransactionManagerInterceptor(getProvider(Injector.class)));
 
@@ -104,10 +114,10 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     bindInterceptor(Matchers.any(), securityAnnotationsMatcher,
       new SecurityManagerInterceptor(getProvider(Injector.class)));
 
+    filter("*").through(JavaScriptCallbackServletFilter.class);
+
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);
-
-    filter("*").through(JavaScriptCallbackServletFilter.class);
 
     serve("/"+APPLICATION_PATH_REST+"/*").with(CustomGuiceContainer.class);
   }
