@@ -33,7 +33,7 @@ public class XmlError implements Serializable
   // CONSTRUCTION
   public XmlError()
   {
-    this(null, null);
+    this("Error", null);
   }
 
   public XmlError(final String message)
