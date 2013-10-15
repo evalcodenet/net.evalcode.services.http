@@ -45,12 +45,12 @@ public class TransactionManagerInterceptor implements MethodInterceptor
     {
       return methodInvocation.proceed();
     }
-    catch(final Throwable throwable)
+    catch(final Exception e)
     {
       if(null!=transaction)
         transaction.rollback();
 
-      throw throwable;
+      throw e;
     }
     finally
     {

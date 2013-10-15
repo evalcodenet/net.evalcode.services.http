@@ -58,7 +58,7 @@ public class PhpClientApplicationClass extends PhpClientClass
       final InputStream inputStream=url.openStream();
 
       int read=0;
-      byte[] buffer=new byte[BUFFER_SIZE];
+      final byte[] buffer=new byte[BUFFER_SIZE];
 
       while(-1<(read=inputStream.read(buffer)))
       {

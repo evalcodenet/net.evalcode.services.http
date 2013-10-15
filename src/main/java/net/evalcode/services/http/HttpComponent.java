@@ -27,6 +27,7 @@ public class HttpComponent implements HttpService
 {
   // MEMBERS
   private static HttpComponent instance;
+
   @Inject
   private ServletContainer servletContainer;
   @Inject

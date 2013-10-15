@@ -6,11 +6,13 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import net.evalcode.services.http.xml.DateXmlAdapter;
-import net.evalcode.services.manager.management.logging.Log;
 import net.evalcode.javax.xml.bind.XmlLinkedQueue;
 import net.evalcode.javax.xml.bind.XmlList;
 import net.evalcode.javax.xml.bind.XmlSet;
+import net.evalcode.services.http.xml.DateXmlAdapter;
+import net.evalcode.services.manager.management.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Provider
@@ -18,6 +20,7 @@ public class JaxbContextResolver implements ContextResolver<JAXBContext>
 {
   // PREDEFINED PROPERTIES
   private static final int COUNT_PREDEFINED_CONTEXT_CLASSES=5;
+  private static final Logger LOG=LoggerFactory.getLogger(JaxbContextResolver.class);
 
 
   // MEMBERS
@@ -69,7 +72,9 @@ public class JaxbContextResolver implements ContextResolver<JAXBContext>
         }
         catch(final JAXBException e)
         {
-          throw new RuntimeException(e.getMessage(), e);
+          LOG.error(e.getMessage(), e);
+
+          throw new IllegalStateException();
         }
       }
     }

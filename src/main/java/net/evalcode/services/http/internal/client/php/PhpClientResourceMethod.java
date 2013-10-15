@@ -54,7 +54,8 @@ public class PhpClientResourceMethod extends PhpClientMethod
   String getSignature()
   {
     return String.format("    public function %1$s(%2$s)\n",
-      getName(), getSignatureParameters()
+      getName(),
+      getSignatureParameters()
     );
   }
 
@@ -78,7 +79,7 @@ public class PhpClientResourceMethod extends PhpClientMethod
     if(null==path && null==returnType && 1>getParameters().size())
       return "";
 
-    final StringBuffer stringBuffer=new StringBuffer();
+    final StringBuffer stringBuffer=new StringBuffer(256);
 
     stringBuffer.append("    /**\n");
 
@@ -93,7 +94,8 @@ public class PhpClientResourceMethod extends PhpClientMethod
       for(final PhpClientMethodParameter parameter : getParameters())
       {
         stringBuffer.append(String.format("     * @param %1$s $%2$s_\n",
-          parameter.getPhpDocType(), parameter.getName()
+          parameter.getPhpDocType(),
+          parameter.getName()
         ));
       }
     }
@@ -114,12 +116,9 @@ public class PhpClientResourceMethod extends PhpClientMethod
   @Override
   String getBody()
   {
-    final StringBuffer stringBuffer=new StringBuffer();
-    final String applicationClassName=getType().getApplication().getApplicationClass().getName();
+    final StringBuffer stringBuffer=new StringBuffer(256);
 
-    stringBuffer.append(
-      String.format("      $url=$this->m_client->getBaseUrl();\n", applicationClassName)
-    );
+    stringBuffer.append("      $url=$this->m_client->getBaseUrl();\n");
 
     final String[] pathSegments=StringUtils.split(
       ((PhpClientResourceClass)getType()).getPath(false).concat(path), "/"
@@ -166,15 +165,13 @@ public class PhpClientResourceMethod extends PhpClientMethod
 
     if(null==getReturnType())
     {
-      stringBuffer.append(
-        String.format("\n      return $this->m_client->resolveUrl($url);\n", applicationClassName)
-      );
+      stringBuffer.append("\n      return $this->m_client->resolveUrl($url);\n");
     }
     else
     {
       stringBuffer.append(
-        String.format("\n      return $this->m_client->resolveUrl($url, '%2$s');\n",
-          applicationClassName, getReturnType()
+        String.format("\n      return $this->m_client->resolveUrl($url, '%1$s');\n",
+          getReturnType()
       ));
     }
 

@@ -68,7 +68,7 @@ public class PhpClientResourceClass extends PhpClientClass
   @Override
   String getPhpDoc()
   {
-    final StringBuffer stringBuffer=new StringBuffer();
+    final StringBuffer stringBuffer=new StringBuffer(128);
 
     final String applicationName=String.format(
       WebApplicationClientGeneratorPhp.PATTERN_APPLICATION_ROOT_PATH, application.getName()

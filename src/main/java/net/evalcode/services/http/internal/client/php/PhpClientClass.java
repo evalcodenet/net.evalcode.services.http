@@ -113,7 +113,7 @@ public class PhpClientClass
   @Override
   public String toString()
   {
-    final StringBuffer stringBuffer=new StringBuffer();
+    final StringBuffer stringBuffer=new StringBuffer(512);
 
     stringBuffer.append(PHP_OPEN);
     stringBuffer.append(StringUtils.repeat(LINE_ENDING, INITIAL_LINE_SPACING));
@@ -253,7 +253,8 @@ public class PhpClientClass
 
     stringBuffer.append(StringUtils.repeat(LINE_INDENTATION, indentation));
     stringBuffer.append(COMMENT_PREFIX);
-    stringBuffer.append(" "+title);
+    stringBuffer.append(" ");
+    stringBuffer.append(title);
 
     if(appendNewLine)
       stringBuffer.append(LINE_ENDING);

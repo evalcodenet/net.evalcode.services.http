@@ -19,12 +19,4 @@ public class HttpComponentServletModule extends HttpServiceServletModule
   {
     return "/http";
   }
-
-
-  // IMPLEMENTATION
-  @Override
-  protected void configureServlets()
-  {
-    super.configureServlets();
-  }
 }

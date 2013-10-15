@@ -191,11 +191,16 @@ public class JettyServletContainer implements ServletContainer
     sslSelectChannelConnector.setHost(httpConnector.getHost());
     sslSelectChannelConnector.setPort(httpConnector.getPort());
 
-    sslSelectChannelConnector.getSslContextFactory().setKeyStore(httpConnector.getKeyStore());
-    sslSelectChannelConnector.getSslContextFactory().setKeyStorePassword(httpConnector.getKeyStorePassword());
-    sslSelectChannelConnector.getSslContextFactory().setTrustStore(httpConnector.getTrustStore());
-    sslSelectChannelConnector.getSslContextFactory().setTrustStorePassword(httpConnector.getTrustStorePassword());
-    sslSelectChannelConnector.getSslContextFactory().setCertAlias(httpConnector.getCertificateAlias());
+    sslSelectChannelConnector.getSslContextFactory()
+      .setKeyStore(httpConnector.getKeyStore());
+    sslSelectChannelConnector.getSslContextFactory()
+      .setKeyStorePassword(httpConnector.getKeyStorePassword());
+    sslSelectChannelConnector.getSslContextFactory()
+      .setTrustStore(httpConnector.getTrustStore());
+    sslSelectChannelConnector.getSslContextFactory()
+      .setTrustStorePassword(httpConnector.getTrustStorePassword());
+    sslSelectChannelConnector.getSslContextFactory()
+      .setCertAlias(httpConnector.getCertificateAlias());
 
     sslSelectChannelConnector.setAcceptors(httpConnector.getAcceptors());
 

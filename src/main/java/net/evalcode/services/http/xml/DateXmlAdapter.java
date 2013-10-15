@@ -2,6 +2,7 @@ package net.evalcode.services.http.xml;
 
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -44,13 +45,13 @@ public class DateXmlAdapter extends XmlAdapter<String, Date>
 
   // OVERRIDES/IMPLEMENTS
   @Override
-  public String marshal(final Date value) throws Exception
+  public String marshal(final Date value)
   {
     return format.format(value);
   }
 
   @Override
-  public Date unmarshal(final String value) throws Exception
+  public Date unmarshal(final String value) throws ParseException
   {
     return format.parse(value);
   }

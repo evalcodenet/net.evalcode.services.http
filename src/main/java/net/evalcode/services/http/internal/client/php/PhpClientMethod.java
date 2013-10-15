@@ -134,7 +134,7 @@ public class PhpClientMethod
     if(null==returnType && 1>getParameters().size())
       return "";
 
-    final StringBuffer stringBuffer=new StringBuffer();
+    final StringBuffer stringBuffer=new StringBuffer(128);
 
     stringBuffer.append("    /**\n");
 

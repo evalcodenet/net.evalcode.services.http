@@ -81,7 +81,7 @@ public class HttpConnector
   // ACCESSORS/MUTATORS
   public boolean isEnabled()
   {
-    return Boolean.valueOf(enabled).booleanValue();
+    return enabled;
   }
 
   public Scheme getScheme()
@@ -109,17 +109,17 @@ public class HttpConnector
 
   public boolean isDirectBuffersEnabled()
   {
-    return Boolean.valueOf(enableDirectBuffers).booleanValue();
+    return enableDirectBuffers;
   }
 
   public boolean isReverseLookupEnabled()
   {
-    return Boolean.valueOf(enableReverseLookup).booleanValue();
+    return enableReverseLookup;
   }
 
   public boolean isStatisticsEnabled()
   {
-    return Boolean.valueOf(enableStatistics).booleanValue();
+    return enableStatistics;
   }
 
   public String getKeyStore()
