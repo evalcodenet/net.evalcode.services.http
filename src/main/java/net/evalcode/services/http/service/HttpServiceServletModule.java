@@ -1,7 +1,7 @@
 package net.evalcode.services.http.service;
 
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -56,10 +56,10 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
   public String getResourcePath()
   {
     final ComponentBundleInterface bundle=injector.getInstance(ComponentBundleInterface.class);
-    final File resourcePath=new File(bundle.getConfiguration().getResourcePath());
+    final Path resourcePath=bundle.getConfiguration().getResourcePath();
 
-    if(resourcePath.exists())
-      return bundle.getConfiguration().getResourcePath();
+    if(resourcePath.toFile().exists())
+      return resourcePath.toString();
 
     return null;
   }
