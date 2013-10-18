@@ -18,13 +18,13 @@ public class PhpClientApplication
 
 
   // MEMBERS
-  private final String name;
-  private final String url;
-  private final String path;
-  private final String filePath;
-  private final Map<String, PhpClientClass> clazzes=new HashMap<String, PhpClientClass>();
+  final Map<String, PhpClientClass> clazzes=new HashMap<>();
+  final String name;
+  final String url;
+  final String path;
+  final String filePath;
 
-  private PhpClientApplicationClass applicationClazz;
+  PhpClientApplicationClass applicationClazz;
 
 
   // CONSTRUCTION

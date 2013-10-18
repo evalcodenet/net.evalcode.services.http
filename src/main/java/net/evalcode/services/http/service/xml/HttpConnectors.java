@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import net.evalcode.services.manager.annotation.Configuration;
+import net.evalcode.services.manager.component.annotation.Configuration;
 
 
 /**
@@ -21,7 +21,7 @@ public class HttpConnectors
 {
   // FIELDS
   @XmlElement(name="http_connectors")
-  private Set<HttpConnector> httpConnectors;
+  Set<HttpConnector> httpConnectors;
 
 
   // ACCESSORS/MUTATORS

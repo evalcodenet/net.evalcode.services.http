@@ -9,9 +9,9 @@ package net.evalcode.services.http.internal.client.php;
 public class PhpClientClassProperty
 {
   // MEMBERS
-  private final String name;
-  private final String value;
-  private final String type;
+  final String name;
+  final String value;
+  final String type;
 
 
   // CONSTRUCTION

@@ -1,4 +1,4 @@
-package net.evalcode.services.http.xml;
+package net.evalcode.services.http.util.xml;
 
 
 import java.text.DateFormat;

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
@@ -53,6 +54,8 @@ public class JettyServletContainer implements ServletContainer
 
   final AtomicBoolean initialized=new AtomicBoolean(false);
   final Queue<HttpService> httpServices=new ConcurrentLinkedQueue<>();
+  final ConcurrentHashMap<String, ServletContextHandler> servletContextHandlers=new ConcurrentHashMap<>();
+  final ContextHandlerCollection contextHandlerContainer=new ContextHandlerCollection();
 
 
   // CONSTRUCTION
@@ -74,29 +77,15 @@ public class JettyServletContainer implements ServletContainer
     if(!initialized.get())
       initialize();
 
-    final ContextHandlerCollection contextHandlerContainer=new ContextHandlerCollection();
-
-    server.setHandler(contextHandlerContainer);
-
-    for(final HttpService httpService : httpServices)
-      addServletContext(contextHandlerContainer, httpService);
-
-    if(null==contextHandlerContainer.getHandlers())
+    try
     {
-      LOG.info("No HTTP services to serve ...");
+      server.start();
     }
-    else
+    catch(final Exception e)
     {
-      try
-      {
-        server.start();
-      }
-      catch(final Exception e)
-      {
-        LOG.debug("Failed to start servlet container.", e);
+      LOG.debug("Failed to start servlet container.", e);
 
-        throw new ServiceException("Failed to start servlet container.", e);
-      }
+      throw new ServiceException("Failed to start servlet container.", e);
     }
   }
 
@@ -132,7 +121,21 @@ public class JettyServletContainer implements ServletContainer
   {
     httpServices.add(httpService);
 
-    restart();
+    addServletContext(httpService);
+
+    try
+    {
+      if(contextHandlerContainer.isStarted())
+        contextHandlerContainer.stop();
+
+      contextHandlerContainer.start();
+    }
+    catch(final Exception e)
+    {
+      LOG.debug(e.getMessage(), e);
+
+      throw new ServiceException("Failed to restart servlet context handler.", e);
+    }
   }
 
   @Override
@@ -140,7 +143,11 @@ public class JettyServletContainer implements ServletContainer
   {
     httpServices.remove(httpService);
 
-    restart();
+    final String contextPath=httpService.getServletModule().getContextPath();
+    final ServletContextHandler servletContextHandler=servletContextHandlers.remove(contextPath);
+
+    if(null!=servletContextHandler)
+      ((ContextHandlerCollection)server.getHandler()).removeHandler(servletContextHandler);
   }
 
 
@@ -150,6 +157,7 @@ public class JettyServletContainer implements ServletContainer
     server.setSendServerVersion(false);
     server.setGracefulShutdown(TIMEOUT_GRACEFUL_SHUTDOWN);
     server.setConnectors(new Connector[] {});
+    server.setHandler(contextHandlerContainer);
 
     final Set<HttpConnector> httpConnectors=this.httpConnectors.get();
 
@@ -211,8 +219,7 @@ public class JettyServletContainer implements ServletContainer
     return sslSelectChannelConnector;
   }
 
-  private void addServletContext(final ContextHandlerCollection contextHandlerContainer,
-    final HttpService httpService)
+  private void addServletContext(final HttpService httpService)
   {
     final HttpServiceServletModule servletModule=httpService.getServletModule();
 
@@ -260,13 +267,7 @@ public class JettyServletContainer implements ServletContainer
         return Guice.createInjector(stage, servletModule);
       }
     });
-  }
 
-  private void restart()
-  {
-    if(isStarted())
-      stop();
-
-    start();
+    servletContextHandlers.put(servletModule.getContextPath(), servletContextHandler);
   }
 }

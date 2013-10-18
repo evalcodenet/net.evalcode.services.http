@@ -1,4 +1,4 @@
-package net.evalcode.services.http.management.osgi;
+package net.evalcode.services.http.service.console;
 
 
 import java.util.concurrent.Executors;
@@ -6,9 +6,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.evalcode.services.http.HttpComponentModule;
 import net.evalcode.services.http.internal.servlet.ServletContainer;
-import net.evalcode.services.manager.annotation.Component;
-import net.evalcode.services.manager.management.logging.Log;
-import net.evalcode.services.manager.management.osgi.ConsoleService;
+import net.evalcode.services.manager.component.annotation.Component;
+import net.evalcode.services.manager.service.console.ConsoleService;
+import net.evalcode.services.manager.service.logging.Log;
 import org.eclipse.osgi.framework.console.CommandInterpreter;
 import org.osgi.framework.ServiceException;
 
@@ -23,14 +23,21 @@ import org.osgi.framework.ServiceException;
 public class ServletContainerConsoleService implements ConsoleService
 {
   // PREDEFINED PROPERTIES
-  private static final long INTERVAL_PRINT_STATUS_UPDATE=500L;
-  private static final String DESCRIPTION="Servlet Container Manager";
-  private static final String COMMAND="http";
+  static final long INTERVAL_PRINT_STATUS_UPDATE=500L;
+  static final String DESCRIPTION="Servlet Container Manager";
+  static final String COMMAND="http";
 
 
   // MEMBERS
+  final ServletContainer servletContainer;
+
+
+  // CONSTRUCTION
   @Inject
-  ServletContainer servletContainer;
+  public ServletContainerConsoleService(final ServletContainer servletContainer)
+  {
+    this.servletContainer=servletContainer;
+  }
 
 
   // ACCESSORS/MUTATORS

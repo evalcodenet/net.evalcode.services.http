@@ -16,7 +16,7 @@ import org.apache.commons.lang.StringUtils;
 public class PhpClientResourceMethod extends PhpClientMethod
 {
   // MEMBERS
-  private final String path;
+  final String path;
 
 
   // CONSTRUCTION

@@ -58,11 +58,11 @@ public abstract class WebApplicationClientGenerator
 
 
   // MEMBERS
-  private final Set<Class<?>> resources=new HashSet<Class<?>>();
+  final Set<Class<?>> resources=new HashSet<>();
 
-  private URL baseUrl;
-  private String contextPath;
-  private String applicationName;
+  URL baseUrl;
+  String contextPath;
+  String applicationName;
 
 
   // ACCESSORS/MUTATORS

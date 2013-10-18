@@ -9,7 +9,7 @@ package net.evalcode.services.http.internal.client.php;
 public class PhpClientResourceMethodParameter extends PhpClientMethodParameter
 {
   // MEMBERS
-  private final boolean isQueryParam;
+  final boolean isQueryParam;
 
 
   // CONSTRUCTION

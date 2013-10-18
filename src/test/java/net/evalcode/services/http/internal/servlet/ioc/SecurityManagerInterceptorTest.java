@@ -1,11 +1,11 @@
-package net.evalcode.services.http.internal.servlet.interceptor;
+package net.evalcode.services.http.internal.servlet.ioc;
 
 
 import javax.annotation.security.DenyAll;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.WebApplicationException;
-import net.evalcode.services.http.internal.servlet.interceptor.SecurityManagerInterceptor;
+import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.mockito.Mockito;

@@ -4,6 +4,7 @@ import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorP
 
 
 
+
 /**
  * PhpClientMethodParameter
  *
@@ -12,11 +13,11 @@ import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorP
 public class PhpClientMethodParameter
 {
   // MEMBERS
-  private final String name;
-  private final String type;
-  private final String typeHint;
-  private final boolean assignMember;
-  private final boolean optional;
+  final boolean assignMember;
+  final boolean optional;
+  final String name;
+  final String type;
+  final String typeHint;
 
 
   // CONSTRUCTION

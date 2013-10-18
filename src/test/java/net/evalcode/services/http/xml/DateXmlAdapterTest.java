@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import net.evalcode.services.http.xml.DateXmlAdapter;
+import net.evalcode.services.http.util.xml.DateXmlAdapter;
 import org.junit.Test;
 
 

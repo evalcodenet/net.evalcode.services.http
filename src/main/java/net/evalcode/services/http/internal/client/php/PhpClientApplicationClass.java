@@ -20,16 +20,16 @@ import org.slf4j.LoggerFactory;
 public class PhpClientApplicationClass extends PhpClientClass
 {
   // PREDEFINED PROPERTIES
-  private static final int BUFFER_SIZE=4096;
+  static final Logger LOG=LoggerFactory.getLogger(PhpClientApplicationClass.class);
+
+  static final int BUFFER_SIZE=4096;
 
   static final String KEY_APPLICATION_NAME="%APPLICATION_NAME%";
   static final String KEY_BASE_URL="%BASE_URL%";
 
-  private static final String RESOURCE_TEMPLATE_PATH=
+  static final String RESOURCE_TEMPLATE_PATH=
     "net/evalcode/services/http/internal/client/php/";
-  private static final String RESOURCE_TEMPLATE="PhpClientApplicationClass.php";
-
-  private static final Logger LOG=LoggerFactory.getLogger(PhpClientApplicationClass.class);
+  static final String RESOURCE_TEMPLATE="PhpClientApplicationClass.php";
 
 
   // CONSTRUCTION

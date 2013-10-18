@@ -1,4 +1,4 @@
-package net.evalcode.services.http.management.jmx;
+package net.evalcode.services.http.service.jmx;
 
 
 import javax.management.MXBean;

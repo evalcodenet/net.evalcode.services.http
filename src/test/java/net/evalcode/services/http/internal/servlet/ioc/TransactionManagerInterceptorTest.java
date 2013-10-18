@@ -1,10 +1,10 @@
-package net.evalcode.services.http.internal.servlet.interceptor;
+package net.evalcode.services.http.internal.servlet.ioc;
 
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import net.evalcode.services.http.annotation.Transactional;
-import net.evalcode.services.http.internal.servlet.interceptor.TransactionManagerInterceptor;
+import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.mockito.Mockito;

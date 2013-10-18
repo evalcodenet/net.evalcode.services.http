@@ -1,13 +1,13 @@
-package net.evalcode.services.http.management.jmx;
+package net.evalcode.services.http.service.jmx;
 
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.evalcode.services.http.HttpComponentModule;
 import net.evalcode.services.http.internal.servlet.ServletContainer;
-import net.evalcode.services.manager.annotation.Component;
-import net.evalcode.services.manager.management.jmx.ServiceMBean;
-import net.evalcode.services.manager.management.logging.Log;
+import net.evalcode.services.manager.component.annotation.Component;
+import net.evalcode.services.manager.service.jmx.ServiceMBean;
+import net.evalcode.services.manager.service.logging.Log;
 
 
 /**
@@ -20,12 +20,19 @@ import net.evalcode.services.manager.management.logging.Log;
 public class ServletContainerMXBeanImpl implements ServiceMBean, ServletContainerMXBean
 {
   // PREDEFINED PROPERTIES
-  private static final String NAME="net.evalcode.services.http";
+  static final String NAME="net.evalcode.services.http";
 
 
   // MEMBERS
+  final ServletContainer servletContainer;
+
+
+  // CONSTRUCTION
   @Inject
-  private ServletContainer servletContainer;
+  public ServletContainerMXBeanImpl(final ServletContainer servletContainer)
+  {
+    this.servletContainer=servletContainer;
+  }
 
 
   // OVERRIDES/IMPLEMENTS

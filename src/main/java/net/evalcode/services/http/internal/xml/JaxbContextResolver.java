@@ -9,8 +9,8 @@ import javax.xml.bind.JAXBException;
 import net.evalcode.javax.xml.bind.XmlLinkedQueue;
 import net.evalcode.javax.xml.bind.XmlList;
 import net.evalcode.javax.xml.bind.XmlSet;
-import net.evalcode.services.http.xml.DateXmlAdapter;
-import net.evalcode.services.manager.management.logging.Log;
+import net.evalcode.services.http.util.xml.DateXmlAdapter;
+import net.evalcode.services.manager.service.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

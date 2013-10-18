@@ -13,7 +13,7 @@ import net.evalcode.services.http.internal.servlet.exception.WebApplicationServi
 public class InternalServerErrorException extends WebApplicationServiceException
 {
   // PREDEFINED PROPERTIES
-  private static final long serialVersionUID=1L;
+  static final long serialVersionUID=1L;
 
 
   // CONSTRUCTION

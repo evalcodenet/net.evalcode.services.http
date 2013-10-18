@@ -14,16 +14,18 @@ import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
 import net.evalcode.services.http.internal.servlet.container.CustomGuiceContainer;
 import net.evalcode.services.http.internal.servlet.exception.NotFoundExceptionMapper;
 import net.evalcode.services.http.internal.servlet.filter.JavaScriptCallbackServletFilter;
-import net.evalcode.services.http.internal.servlet.interceptor.SecurityManagerInterceptor;
-import net.evalcode.services.http.internal.servlet.interceptor.TransactionManagerInterceptor;
+import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
+import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
 import net.evalcode.services.manager.component.ComponentBundleInspector;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
-import net.evalcode.services.manager.management.logging.Log;
-import net.evalcode.services.manager.management.logging.impl.MethodInvocationLogger;
-import net.evalcode.services.manager.management.statistics.Count;
-import net.evalcode.services.manager.management.statistics.impl.MethodInvocationCounter;
+import net.evalcode.services.manager.service.cache.Cache;
+import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
+import net.evalcode.services.manager.service.logging.Log;
+import net.evalcode.services.manager.service.logging.ioc.MethodInvocationLogger;
+import net.evalcode.services.manager.service.statistics.Count;
+import net.evalcode.services.manager.service.statistics.ioc.MethodInvocationCounter;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -47,7 +49,7 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
 
   // MEMBERS
   @Inject
-  private Injector injector;
+  Injector injector;
 
 
   // ACCESSORS/MUTATAORS
@@ -97,6 +99,9 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     bind(EntityManager.class)
       .toProvider(EntityManagerProvider.class)
       .in(ServletScopes.REQUEST);
+
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Cache.class),
+      new MethodInvocationCache(getProvider(Injector.class)));
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Log.class),
       new MethodInvocationLogger());

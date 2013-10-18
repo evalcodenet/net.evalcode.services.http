@@ -1,8 +1,8 @@
 package net.evalcode.services.http.service;
 
 
-import net.evalcode.services.manager.annotation.Service;
 import net.evalcode.services.manager.component.ServiceComponent;
+import net.evalcode.services.manager.component.annotation.Service;
 
 
 /**

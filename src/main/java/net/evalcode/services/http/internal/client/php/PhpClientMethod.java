@@ -14,16 +14,16 @@ import org.apache.commons.lang.StringUtils;
 public class PhpClientMethod
 {
   // PREDEFINED PROPERTIES
-  public static final String NAME_CONSTRUCTOR="__construct";
+  static final String NAME_CONSTRUCTOR="__construct";
 
 
   // MEMBERS
-  private final String name;
-  private final String returnType;
-  private final PhpClientClass type;
-  private final List<PhpClientMethodParameter> parameters=new ArrayList<PhpClientMethodParameter>();
+  final List<PhpClientMethodParameter> parameters=new ArrayList<>();
+  final String name;
+  final String returnType;
+  final PhpClientClass type;
 
-  private String body;
+  String body;
 
 
   // CONSTRUCTION

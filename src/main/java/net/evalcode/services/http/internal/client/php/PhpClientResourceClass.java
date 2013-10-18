@@ -14,8 +14,8 @@ import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorP
 public class PhpClientResourceClass extends PhpClientClass
 {
   // MEMBERS
-  private final String path;
-  private final List<PhpClientClass> entityClasses=new ArrayList<PhpClientClass>();
+  final List<PhpClientClass> entityClasses=new ArrayList<>();
+  final String path;
 
 
   // CONSTRUCTION

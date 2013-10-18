@@ -38,14 +38,14 @@ public class PhpClientClass
 
 
   // MEMBERS
-  protected final String name;
-  protected final String fileName;
-  protected final Class<?> clazz;
-  protected final PhpClientApplication application;
-  protected final List<PhpClientClassConstant> constants=new ArrayList<PhpClientClassConstant>();
-  protected final List<PhpClientClassProperty> properties=new ArrayList<PhpClientClassProperty>();
-  protected final List<PhpClientMethod> methods=new ArrayList<PhpClientMethod>();
-  protected final List<String> interfaces=new ArrayList<String>();
+  final String name;
+  final String fileName;
+  final Class<?> clazz;
+  final PhpClientApplication application;
+  final List<PhpClientClassConstant> constants=new ArrayList<>();
+  final List<PhpClientClassProperty> properties=new ArrayList<>();
+  final List<PhpClientMethod> methods=new ArrayList<>();
+  final List<String> interfaces=new ArrayList<>();
 
 
   // CONSTRUCTION

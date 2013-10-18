@@ -13,8 +13,8 @@ Require-Bundle: net.evalcode.services.lib,
 Export-Package: net.evalcode.services.http,
  net.evalcode.services.http.annotation,
  net.evalcode.services.http.annotation.client,
- net.evalcode.services.http.management.jmx,
- net.evalcode.services.http.management.osgi,
  net.evalcode.services.http.exception,
  net.evalcode.services.http.service,
- net.evalcode.services.http.xml
+ net.evalcode.services.http.service.console,
+ net.evalcode.services.http.service.jmx,
+ net.evalcode.services.http.util.xml

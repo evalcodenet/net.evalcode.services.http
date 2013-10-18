@@ -1,4 +1,4 @@
-package net.evalcode.services.http.internal.servlet.interceptor;
+package net.evalcode.services.http.internal.servlet.ioc;
 
 
 import javax.persistence.EntityManager;

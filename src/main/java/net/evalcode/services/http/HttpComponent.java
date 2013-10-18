@@ -9,11 +9,12 @@ import javax.inject.Singleton;
 import net.evalcode.services.http.internal.servlet.ServletContainer;
 import net.evalcode.services.http.service.HttpService;
 import net.evalcode.services.http.service.HttpServiceServletModule;
-import net.evalcode.services.manager.annotation.Bind;
-import net.evalcode.services.manager.annotation.Component;
-import net.evalcode.services.manager.annotation.Deactivate;
-import net.evalcode.services.manager.annotation.Unbind;
-import net.evalcode.services.manager.management.logging.Log;
+import net.evalcode.services.manager.component.annotation.Activate;
+import net.evalcode.services.manager.component.annotation.Bind;
+import net.evalcode.services.manager.component.annotation.Component;
+import net.evalcode.services.manager.component.annotation.Deactivate;
+import net.evalcode.services.manager.component.annotation.Unbind;
+import net.evalcode.services.manager.service.logging.Log;
 
 
 /**
@@ -26,18 +27,18 @@ import net.evalcode.services.manager.management.logging.Log;
 public class HttpComponent implements HttpService
 {
   // MEMBERS
-  private static HttpComponent instance;
+  static HttpComponent instance;
 
   @Inject
-  private ServletContainer servletContainer;
+  ServletContainer servletContainer;
   @Inject
-  private HttpComponentServletModule componentServletModule;
+  HttpComponentServletModule componentServletModule;
   @Inject
   @Named("net.evalcode.services.locale")
-  private Locale locale;
+  Locale locale;
   @Inject
   @Named("net.evalcode.services.timezone")
-  private TimeZone timeZone;
+  TimeZone timeZone;
 
 
   // CONSTRUCTION
@@ -48,13 +49,20 @@ public class HttpComponent implements HttpService
 
 
   // STATIC ACCESSORS
-  public static HttpComponent get()
+  public static final HttpComponent get()
   {
     return instance;
   }
 
 
   // ACCESSORS/MUTATORS
+  @Log
+  @Activate
+  public void activate()
+  {
+    servletContainer.start();
+  }
+
   @Log
   @Deactivate
   public void deactivate()

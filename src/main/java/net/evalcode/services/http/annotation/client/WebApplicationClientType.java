@@ -36,12 +36,12 @@ public @interface WebApplicationClientType
   public static enum Type
   {
     // PREDEFINED TYPES
-    BOOL("bool"),
-    INT("int"),
-    FLOAT("float"),
-    STRING("string"),
-    DATE("Misc_Date"),
-    URI("Net_Uri");
+    BOOL("Components\\Boolean"),
+    INT("Components\\Integer"),
+    FLOAT("Components\\Float"),
+    STRING("Components\\String"),
+    DATE("Components\\Date"),
+    URI("Components\\Uri");
 
 
     // PROPERTIES
