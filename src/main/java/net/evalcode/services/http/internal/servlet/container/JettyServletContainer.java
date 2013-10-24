@@ -54,7 +54,8 @@ public class JettyServletContainer implements ServletContainer
 
   final AtomicBoolean initialized=new AtomicBoolean(false);
   final Queue<HttpService> httpServices=new ConcurrentLinkedQueue<>();
-  final ConcurrentHashMap<String, ServletContextHandler> servletContextHandlers=new ConcurrentHashMap<>();
+  final ConcurrentHashMap<String, ServletContextHandler> servletContextHandlers=
+    new ConcurrentHashMap<>();
   final ContextHandlerCollection contextHandlerContainer=new ContextHandlerCollection();
 
 
@@ -127,7 +128,8 @@ public class JettyServletContainer implements ServletContainer
   }
 
   /**
-   * FIXME Should probably destroy connectors & context handlers or fully re-initialize in start/stop.
+   * FIXME Should probably destroy connectors & context handlers or
+   * fully re-initialize server/connectors/context-handlers during start/stop.
    */
   public void shutdown()
   {
