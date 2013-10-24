@@ -67,7 +67,7 @@ public class HttpComponent implements HttpService
   @Deactivate
   public void deactivate()
   {
-    servletContainer.stop();
+    servletContainer.shutdown();
   }
 
   public Locale getLocale()

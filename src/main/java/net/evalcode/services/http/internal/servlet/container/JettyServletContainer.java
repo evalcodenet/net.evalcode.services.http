@@ -77,15 +77,34 @@ public class JettyServletContainer implements ServletContainer
     if(!initialized.get())
       initialize();
 
-    try
+    if(server.isStopped())
     {
-      server.start();
-    }
-    catch(final Exception e)
-    {
-      LOG.debug("Failed to start servlet container.", e);
+      try
+      {
+        server.start();
+      }
+      catch(final Exception e)
+      {
+        LOG.debug("Failed to start servlet container.", e);
 
-      throw new ServiceException("Failed to start servlet container.", e);
+        throw new ServiceException("Failed to start servlet container.", e);
+      }
+    }
+    else
+    {
+      try
+      {
+        for(final Connector connector : server.getConnectors())
+          connector.start();
+
+        contextHandlerContainer.start();
+      }
+      catch(final Exception e)
+      {
+        LOG.debug("Failed to start servlet container.", e);
+
+        throw new ServiceException("Failed to start servlet container.", e);
+      }
     }
   }
 
@@ -94,11 +113,33 @@ public class JettyServletContainer implements ServletContainer
   {
     try
     {
+      for(final Connector connector : server.getConnectors())
+        connector.stop();
+
+      contextHandlerContainer.stop();
+    }
+    catch(final Exception e)
+    {
+      LOG.debug("Failed to stop servlet container.", e);
+
+      throw new ServiceException("Failed to stop servlet container.", e);
+    }
+  }
+
+  /**
+   * FIXME Should probably destroy connectors & context handlers or fully re-initialize in start/stop.
+   */
+  public void shutdown()
+  {
+    stop();
+
+    try
+    {
       server.stop();
     }
     catch(final Exception e)
     {
-      LOG.debug("Failed to start servlet container.", e);
+      LOG.debug("Failed to stop servlet container.", e);
 
       throw new ServiceException("Failed to stop servlet container.", e);
     }
@@ -107,13 +148,13 @@ public class JettyServletContainer implements ServletContainer
   @Override
   public boolean isStarted()
   {
-    return server.isStarted();
+    return contextHandlerContainer.isStarted();
   }
 
   @Override
   public boolean isStopped()
   {
-    return server.isStopped();
+    return contextHandlerContainer.isStopped();
   }
 
   @Override

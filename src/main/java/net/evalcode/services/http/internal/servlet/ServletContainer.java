@@ -14,6 +14,7 @@ public interface ServletContainer
   // ACCESSORS/MUTATORS
   void start();
   void stop();
+  void shutdown();
 
   boolean isStarted();
   boolean isStopped();
