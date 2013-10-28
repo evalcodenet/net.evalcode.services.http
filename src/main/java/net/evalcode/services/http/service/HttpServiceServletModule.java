@@ -20,7 +20,7 @@ import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
 import net.evalcode.services.manager.component.ComponentBundleInspector;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
-import net.evalcode.services.manager.service.cache.Cache;
+import net.evalcode.services.manager.service.cache.annotation.Cache;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
 import net.evalcode.services.manager.service.logging.Log;
 import net.evalcode.services.manager.service.logging.ioc.MethodInvocationLogger;
@@ -30,6 +30,7 @@ import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
+import com.google.inject.Stage;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.ServletScopes;
@@ -101,23 +102,31 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .in(ServletScopes.REQUEST);
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Cache.class),
-      new MethodInvocationCache(getProvider(Injector.class)));
-
-    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Log.class),
-      new MethodInvocationLogger());
+      new MethodInvocationCache(getProvider(Injector.class))
+    );
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Count.class),
-      new MethodInvocationCounter());
+      new MethodInvocationCounter()
+    );
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class),
-      new TransactionManagerInterceptor(getProvider(Injector.class)));
+      new TransactionManagerInterceptor(getProvider(Injector.class))
+    );
 
     final Matcher securityAnnotationsMatcher=Matchers.annotatedWith(RolesAllowed.class)
       .or(Matchers.annotatedWith(DenyAll.class))
       .or(Matchers.annotatedWith(PermitAll.class));
 
     bindInterceptor(Matchers.any(), securityAnnotationsMatcher,
-      new SecurityManagerInterceptor(getProvider(Injector.class)));
+      new SecurityManagerInterceptor(getProvider(Injector.class))
+    );
+
+    if(Stage.DEVELOPMENT.equals(currentStage()))
+    {
+      bindInterceptor(Matchers.any(), Matchers.annotatedWith(Log.class),
+        new MethodInvocationLogger()
+      );
+    }
 
     filter("*").through(JavaScriptCallbackServletFilter.class);
 

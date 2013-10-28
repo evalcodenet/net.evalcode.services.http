@@ -10,7 +10,6 @@ import net.evalcode.javax.xml.bind.XmlLinkedQueue;
 import net.evalcode.javax.xml.bind.XmlList;
 import net.evalcode.javax.xml.bind.XmlSet;
 import net.evalcode.services.http.util.xml.DateXmlAdapter;
-import net.evalcode.services.manager.service.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,6 @@ public class JaxbContextResolver implements ContextResolver<JAXBContext>
 
   // OVERRIDES/IMPLEMENTS
   @Override
-  @Log(level=Log.Level.INFO)
   public JAXBContext getContext(final Class<?> clazz)
   {
     return getContextImpl();

@@ -56,15 +56,15 @@ public class HttpComponent implements HttpService
 
 
   // ACCESSORS/MUTATORS
-  @Log
   @Activate
+  @Log(level=Log.Level.INFO)
   public void activate()
   {
     servletContainer.start();
   }
 
-  @Log
   @Deactivate
+  @Log(level=Log.Level.INFO)
   public void deactivate()
   {
     servletContainer.shutdown();
@@ -82,14 +82,12 @@ public class HttpComponent implements HttpService
 
 
   // OVERRIDES/IMPLEMENTS
-  @Log
   @Bind
   public void bind(final HttpService httpService)
   {
     servletContainer.addHttpService(httpService);
   }
 
-  @Log
   @Unbind
   public void unbind(final HttpService httpService)
   {

@@ -41,6 +41,7 @@ public class ServletContainerConsoleService implements ConsoleService
 
 
   // ACCESSORS/MUTATORS
+  @Log
   @ConsoleService.Method(command="status", description="Show Servlet Container Status")
   public void status(final CommandInterpreter commandInterpreter)
   {
