@@ -2,7 +2,6 @@ package net.evalcode.services.http.exception;
 
 
 import javax.ws.rs.core.Response;
-import net.evalcode.services.http.internal.servlet.exception.WebApplicationServiceException;
 
 
 /**
@@ -10,7 +9,7 @@ import net.evalcode.services.http.internal.servlet.exception.WebApplicationServi
  *
  * @author carsten.schipke@gmail.com
  */
-public class ForbiddenException extends WebApplicationServiceException
+public class ForbiddenException extends HttpException
 {
   // PREDEFINED PROPERTIES
   static final long serialVersionUID=1L;
