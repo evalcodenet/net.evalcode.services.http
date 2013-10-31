@@ -13,6 +13,7 @@ import org.eclipse.jetty.server.Server;
  *
  * @author carsten.schipke@gmail.com
  */
+@Singleton
 public class HttpComponentModule extends ServiceComponentModule
 {
   // IMPLEMENTATION
