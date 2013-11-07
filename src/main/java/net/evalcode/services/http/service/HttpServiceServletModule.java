@@ -18,7 +18,6 @@ import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerIntercepto
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
-import net.evalcode.services.manager.component.ComponentBundleInspector;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
@@ -88,12 +87,7 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       bind(binding.getKey()).toProvider((Provider)binding.getProvider());
     }
 
-    final ComponentBundleInterface bundle=injector.getInstance(ComponentBundleInterface.class);
-    final ComponentBundleInspector bundleInspector=bundle.getInspector();
-
-    bind(JaxbContextResolver.class).toInstance(
-      new JaxbContextResolver(bundleInspector.getExportedJaxbEntities())
-    );
+    bind(JaxbContextResolver.class);
 
     bind(NotFoundExceptionMapper.class);
 
