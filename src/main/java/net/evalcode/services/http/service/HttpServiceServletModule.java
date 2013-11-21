@@ -21,6 +21,8 @@ import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorReso
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
+import net.evalcode.services.manager.service.concurrent.annotation.Asynchronous;
+import net.evalcode.services.manager.service.concurrent.ioc.MethodInvocationExecutor;
 import net.evalcode.services.manager.service.logging.Log;
 import net.evalcode.services.manager.service.logging.ioc.MethodInvocationLogger;
 import net.evalcode.services.manager.service.statistics.Count;
@@ -94,6 +96,9 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     bind(EntityManager.class)
       .toProvider(EntityManagerProvider.class)
       .in(ServletScopes.REQUEST);
+
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Asynchronous.class),
+      new MethodInvocationExecutor());
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Cache.class),
       new MethodInvocationCache(getProvider(Injector.class))
