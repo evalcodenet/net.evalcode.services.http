@@ -10,19 +10,22 @@ public class PhpClientClassProperty
 {
   // MEMBERS
   final String name;
+  final String nameMapped;
   final String value;
   final String type;
 
 
   // CONSTRUCTION
-  public PhpClientClassProperty(final String name, final String value)
+  public PhpClientClassProperty(final String name, final String nameMapped, final String value)
   {
-    this(name, value, null);
+    this(name, nameMapped, value, null);
   }
 
-  public PhpClientClassProperty(final String name, final String value, final String type)
+  public PhpClientClassProperty(final String name, final String nameMapped, final String value,
+    final String type)
   {
     this.name=name;
+    this.nameMapped=nameMapped;
     this.value=value;
     this.type=type;
   }
@@ -32,6 +35,11 @@ public class PhpClientClassProperty
   public String getName()
   {
     return name;
+  }
+
+  public String getNameMapped()
+  {
+    return nameMapped;
   }
 
   public String getValue()
@@ -59,9 +67,18 @@ public class PhpClientClassProperty
   // IMPLEMENTATION
   String getPhpDoc()
   {
-    if(null==getType())
+    if(name==nameMapped && null==type)
       return "";
 
-    return String.format("    /**\n     * @var %2$s\n     */\n", getName(), getType());
+    final StringBuffer stringBuffer=new StringBuffer(32);
+
+    stringBuffer.append("    /**\n");
+    if(name!=nameMapped)
+      stringBuffer.append(String.format("     * @name %1$s\n", nameMapped));
+    if(null!=type)
+      stringBuffer.append(String.format("     * @var %1$s\n", type));
+    stringBuffer.append("     */\n");
+
+    return stringBuffer.toString();
   }
 }

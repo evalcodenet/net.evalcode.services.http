@@ -2,9 +2,7 @@ package net.evalcode.services.http.internal.client.php;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 
@@ -17,15 +15,17 @@ public class PhpClientResourceMethod extends PhpClientMethod
 {
   // MEMBERS
   final String path;
+  final String httpMethod;
 
 
   // CONSTRUCTION
   public PhpClientResourceMethod(final PhpClientResourceClass type,
-    final String name, final String path, final String returnType)
+    final String name, final String httpMethod, final String path, final String returnType)
   {
     super(type, name, returnType);
 
     this.path=path;
+    this.httpMethod=httpMethod;
   }
 
 
@@ -38,14 +38,27 @@ public class PhpClientResourceMethod extends PhpClientMethod
   public String getPath(final boolean full)
   {
     if(full)
+    {
+      if(null==path)
+        return ((PhpClientResourceClass)getType()).getPath();
+
       return ((PhpClientResourceClass)getType()).getPath().concat(path);
+    }
 
     return path;
   }
 
   public String getUrl()
   {
+    if(null==path)
+      return ((PhpClientResourceClass)getType()).getUrl();
+
     return ((PhpClientResourceClass)getType()).getUrl().concat(path);
+  }
+
+  public String getHttpMethod()
+  {
+    return httpMethod;
   }
 
 
@@ -73,18 +86,13 @@ public class PhpClientResourceMethod extends PhpClientMethod
   @Override
   String getPhpDoc()
   {
-    final String path=getPath();
-    final String returnType=getReturnType();
-
-    if(null==path && null==returnType && 1>getParameters().size())
-      return "";
-
     final StringBuffer stringBuffer=new StringBuffer(256);
 
     stringBuffer.append("    /**\n");
+    stringBuffer.append(String.format("     * @%1$s\n", httpMethod));
 
     if(null!=path)
-      stringBuffer.append(String.format("     * uri: %1$s\n", path));
+      stringBuffer.append(String.format("     * @Path(%1$s)\n", path));
 
     if(0<getParameters().size())
     {
@@ -95,10 +103,12 @@ public class PhpClientResourceMethod extends PhpClientMethod
       {
         stringBuffer.append(String.format("     * @param %1$s $%2$s_\n",
           parameter.getPhpDocType(),
-          parameter.getName()
+          parameter.getNameCamelCase()
         ));
       }
     }
+
+    final String returnType=getReturnType();
 
     if(null!=returnType)
     {
@@ -116,65 +126,6 @@ public class PhpClientResourceMethod extends PhpClientMethod
   @Override
   String getBody()
   {
-    final StringBuffer stringBuffer=new StringBuffer(256);
-
-    stringBuffer.append("      $url=$this->m_client->getBaseUrl();\n");
-
-    final String[] pathSegments=StringUtils.split(
-      ((PhpClientResourceClass)getType()).getPath(false).concat(path), "/"
-    );
-
-    final Map<String, PhpClientResourceMethodParameter> pathParameters=
-      new HashMap<String, PhpClientResourceMethodParameter>();
-
-    for(final PhpClientMethodParameter parameter : getParameters())
-    {
-      if(!(parameter instanceof PhpClientResourceMethodParameter))
-        continue;
-
-      if(((PhpClientResourceMethodParameter)parameter).isQueryParam())
-      {
-        stringBuffer.append(
-          String.format("      $url->setQueryParam('%1$s', $%1$s_);\n", parameter.getName())
-        );
-      }
-      else
-      {
-        pathParameters.put(((PhpClientResourceMethodParameter)parameter).getName(),
-          (PhpClientResourceMethodParameter)parameter
-        );
-      }
-    }
-
-    for(final String pathSegment : pathSegments)
-    {
-      if(pathParameters.containsKey(pathSegment.substring(1, pathSegment.length()-1)))
-      {
-        stringBuffer.append(
-          String.format("      $url->pushPathParam($%1$s_);\n",
-            pathSegment.substring(1, pathSegment.length()-1)
-        ));
-      }
-      else
-      {
-        stringBuffer.append(
-          String.format("      $url->pushPathParam('%1$s');\n", pathSegment)
-        );
-      }
-    }
-
-    if(null==getReturnType())
-    {
-      stringBuffer.append("\n      return $this->m_client->resolveUrl($url);\n");
-    }
-    else
-    {
-      stringBuffer.append(
-        String.format("\n      return $this->m_client->resolveUrl($url, '%1$s');\n",
-          getReturnType()
-      ));
-    }
-
-    return stringBuffer.toString();
+    return "\n      return $this->invoke(__METHOD__, func_get_args());\n";
   }
 }

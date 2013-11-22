@@ -5,25 +5,30 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlTransient;
 import net.evalcode.services.http.annotation.client.WebApplicationClientEntities;
 import net.evalcode.services.http.annotation.client.WebApplicationClientType;
 import net.evalcode.services.http.internal.client.php.PhpClientApplication;
-import net.evalcode.services.http.internal.client.php.PhpClientApplicationClass;
 import net.evalcode.services.http.internal.client.php.PhpClientClass;
 import net.evalcode.services.http.internal.client.php.PhpClientClassConstant;
 import net.evalcode.services.http.internal.client.php.PhpClientClassProperty;
-import net.evalcode.services.http.internal.client.php.PhpClientMethod;
-import net.evalcode.services.http.internal.client.php.PhpClientMethodParameter;
 import net.evalcode.services.http.internal.client.php.PhpClientResourceClass;
 import net.evalcode.services.http.internal.client.php.PhpClientResourceMethod;
 import net.evalcode.services.http.internal.client.php.PhpClientResourceMethodParameter;
+import net.evalcode.services.http.internal.client.php.PhpEnumeration;
 import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,23 +41,38 @@ import org.slf4j.LoggerFactory;
 public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenerator
 {
   // PREDEFINED PROPERTIES
-  public static final String PATTERN_APPLICATION_ROOT_PATH="%1$s";
-  public static final String PATTERN_APPLICATION_CLASS_NAME="%1$s_Client";
-  public static final String PATTERN_CLASS_NAME="%1$s_%2$s_%3$s";
-  public static final String PATTERN_CLASS_FILE="%1$s/%2$s.php";
+  public static final String NAMESPACE="Components";
+  public static final String CLASS_RESOURCE="Rest_Resource";
+  public static final String CLASS_OBJECT="Object";
+  public static final String CLASS_PATH="source";
+  public static final String CLASS_FILE_EXTENSION="php";
 
-  public static final String NAMESPACE_RESOURCE="resource";
-  public static final String NAMESPACE_ENTITY="transport";
+  public static final String PHP_TYPE_DEFAULT="null";
+  public static final String PHP_TYPE_COLLECTION="array";
+  public static final String PHP_TYPE_COLLECTION_DEFAULT="array()";
 
-  public static final String APPLICATION_FILE_NAME="client.php";
-  public static final String CLASS_NAME_SERVICES_CLIENT="Services_Client";
-  public static final String CLASS_NAME_SERVICES_TRANSPORT_OBJECT="Services_Transport_Object";
-
-  public static final String PHP_DEFAULT_TYPE_INITIALIZATION="null";
-
-  public static final String PHP_COLLECTION_WRAPPER_TYPE_NAME="array";
-  public static final String PHP_COLLECTION_WRAPPER_TYPE_PHPDOC="mixed";
-  public static final String PHP_COLLECTION_WRAPPER_TYPE_INITIALIZATION="array()";
+  public static final Map<Class<?>, String> TYPE_TABLE_PRIMITIVES=new HashMap<Class<?>, String>() {{
+      put(boolean.class, TYPE_CONVERSION_BOOL);
+      put(Boolean.class, TYPE_CONVERSION_BOOL);
+      put(boolean.class, TYPE_CONVERSION_BOOL);
+      put(Byte.class, TYPE_CONVERSION_INT);
+      put(byte.class, TYPE_CONVERSION_INT);
+      put(Character.class, TYPE_CONVERSION_INT);
+      put(char.class, TYPE_CONVERSION_INT);
+      put(Double.class, TYPE_CONVERSION_FLOAT);
+      put(double.class, TYPE_CONVERSION_FLOAT);
+      put(Float.class, TYPE_CONVERSION_FLOAT);
+      put(float.class, TYPE_CONVERSION_FLOAT);
+      put(Integer.class, TYPE_CONVERSION_INT);
+      put(int.class, TYPE_CONVERSION_INT);
+      put(Long.class, TYPE_CONVERSION_INT);
+      put(long.class, TYPE_CONVERSION_INT);
+      put(Short.class, TYPE_CONVERSION_INT);
+      put(short.class, TYPE_CONVERSION_INT);
+      put(String.class, TYPE_CONVERSION_STRING);
+    }
+    private static final long serialVersionUID=1L;
+  };
 
   static final Logger LOG=LoggerFactory.getLogger(WebApplicationClientGeneratorPhp.class);
 
@@ -62,16 +82,12 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
   public PhpClientApplication generateApplicationClient()
   {
     final PhpClientApplication application=new PhpClientApplication(
-      getApplicationName(), getApplicationFilePath(), getApplicationUrlPath(), getApplicationUrl()
+      getApplicationName(), getApplicationUrlPath(), getApplicationUrl()
     );
-
-    application.setApplicationClass(new PhpClientApplicationClass(
-      application, getApplicationClassName(), getApplicationFileName()
-    ));
 
     for(final Class<?> resourceClazz : getResources())
     {
-      if(!application.getClasses().containsKey(getResourceFileName(resourceClazz)))
+      if(!application.getClasses().containsKey(getFileName(getClazzName(resourceClazz))))
         generateResourceClass(application, resourceClazz);
     }
 
@@ -82,17 +98,8 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
     final Class<?> resourceClazz)
   {
     final PhpClientResourceClass resource=(PhpClientResourceClass)application.addClass(
-      new PhpClientResourceClass(application, resourceClazz, getResourceName(resourceClazz),
-        getResourceFileName(resourceClazz), getResourceUrlPath(resourceClazz)
-    ));
-
-    final PhpClientMethod resourceConstructor=resource.addMethod(
-      PhpClientMethod.createConstructor(resource)
-    );
-
-    resourceConstructor.addParameter(
-      new PhpClientMethodParameter("client", CLASS_NAME_SERVICES_CLIENT,
-        CLASS_NAME_SERVICES_CLIENT, true
+      new PhpClientResourceClass(application, resourceClazz, getClazzName(resourceClazz),
+        getFileName(getClazzName(resourceClazz)), getResourceUrlPath(resourceClazz)
     ));
 
     for(final Method method : resourceClazz.getMethods())
@@ -111,8 +118,8 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
       for(final Class<?> referencedEntityType : referencedEntityTypes.value())
       {
         if(isJaxbType(referencedEntityType) &&
-          !application.getClasses().containsKey(getEntityFileName(referencedEntityType)))
-          generateEntityClass(application, resource, referencedEntityType);
+          !application.getClasses().containsKey(getFileName(getClazzName(referencedEntityType))))
+          addEntityType(application, resource, referencedEntityType);
       }
     }
 
@@ -122,57 +129,65 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
   public PhpClientResourceMethod generateResourceMethod(final PhpClientApplication application,
     final PhpClientResourceClass resource, final Method method)
   {
-    String returnTypeName=null;
     Class<?> returnType=method.getReturnType();
+    String returnTypeName=null;
 
-    if(ClassUtils.getAllInterfaces(method.getReturnType()).contains(Iterable.class))
+    if(!void.class.equals(returnType))
     {
-      final int countTypeArguments=((ParameterizedType)method.getGenericReturnType())
-        .getActualTypeArguments().length;
+      Class<?> concreteReturnType=returnType;
 
-      if(method.getGenericReturnType() instanceof ParameterizedType && 1==countTypeArguments)
+      if(returnType.isEnum())
       {
-        final String genericReturnTypeName=
-          ((Class<?>)((ParameterizedType)method.getGenericReturnType())
-            .getActualTypeArguments()[0]).getName();
+        final XmlEnum xmlEnum=returnType.getAnnotation(XmlEnum.class);
 
-        try
+        if(null==xmlEnum)
+          concreteReturnType=String.class;
+        else
+          concreteReturnType=xmlEnum.value();
+      }
+
+      if(TYPE_TABLE_CONVERSION.containsKey(concreteReturnType))
+        returnTypeName=TYPE_TABLE_CONVERSION.get(concreteReturnType);
+      else
+        returnTypeName=getClazzName(concreteReturnType);
+
+      if(ClassUtils.getAllInterfaces(returnType).contains(Iterable.class))
+      {
+        final Type genericReturnType=method.getGenericReturnType();
+
+        if(genericReturnType instanceof ParameterizedType)
         {
-          returnType=Class.forName(genericReturnTypeName);
+          final Type actualType=((ParameterizedType)genericReturnType).getActualTypeArguments()[0];
+
+          concreteReturnType=(Class<?>)actualType;
+
+          if(TYPE_TABLE_CONVERSION.containsKey(concreteReturnType))
+            returnTypeName=TYPE_TABLE_CONVERSION.get(concreteReturnType).concat("[]");
+          else
+            returnTypeName=getClazzName(concreteReturnType).concat("[]");
         }
-        catch(final ClassNotFoundException e)
-        {
-          LOG.debug(e.getMessage(), e);
-        }
+      }
+      else if(returnType.isArray())
+      {
+        returnTypeName=returnTypeName.concat("[]");
+      }
+
+      if(isJaxbType(concreteReturnType))
+      {
+        if(!application.getClasses().containsKey(getFileName(getClazzName(concreteReturnType))))
+          addEntityType(application, resource, concreteReturnType);
       }
     }
 
-    if(isJaxbType(returnType))
-    {
-      returnTypeName=getEntityName(returnType);
-
-      if(!application.getClasses().containsKey(getEntityFileName(returnType)))
-        generateEntityClass(application, resource, returnType);
-    }
-    else if(ClassUtils.getAllInterfaces(method.getReturnType()).contains(Iterable.class))
-    {
-      returnTypeName=PHP_COLLECTION_WRAPPER_TYPE_PHPDOC;
-    }
-
     final PhpClientResourceMethod resourceMethod=(PhpClientResourceMethod)resource.addMethod(
-      new PhpClientResourceMethod(resource, getMethodName(method),
+      new PhpClientResourceMethod(resource, getMethodName(method), getHttpMethod(method),
         getMethodUrlPath(method), returnTypeName
     ));
 
     final int parameterCount=method.getParameterTypes().length;
 
     for(int i=0; i<parameterCount; i++)
-    {
-      if(!isWebApplicationMethodParameter(method, i))
-        continue;
-
       generateResourceMethodParameter(application, resource, resourceMethod, method, i);
-    }
 
     return resourceMethod;
   }
@@ -183,36 +198,142 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
   {
     final Class<?> parameterType=getMethodParameterType(method, parameter);
 
-    String parameterTypeName=null;
-    if(ClassUtils.getAllInterfaces(parameterType).contains(Iterable.class))
-    {
-      parameterTypeName=PHP_COLLECTION_WRAPPER_TYPE_NAME;
-    }
-    else if(isJaxbType(parameterType))
-    {
-      parameterTypeName=getEntityName(parameterType);
+    Class<?> concreteParameterType=parameterType;
+    String parameterTypeDoc=getClazzName(parameterType);
+    String parameterDefault=null;
 
-      if(!application.getClasses().containsKey(getEntityFileName(parameterType)))
-        generateEntityClass(application, resource, parameterType);
+    if(isWebApplicationQueryParameter(method, parameter))
+      parameterDefault=PHP_TYPE_DEFAULT;
+
+    String parameterTypeHint;
+    if(TYPE_TABLE_PRIMITIVES.containsKey(concreteParameterType))
+      parameterTypeHint=null;
+    else
+      parameterTypeHint=getClazzName(parameterType);
+
+    if(parameterType.isEnum())
+    {
+      final XmlEnum xmlEnum=parameterType.getAnnotation(XmlEnum.class);
+
+      if(null==xmlEnum)
+        concreteParameterType=String.class;
+      else
+        concreteParameterType=xmlEnum.value();
+    }
+    else if(ClassUtils.getAllInterfaces(parameterType).contains(Iterable.class))
+    {
+      final Type genericParameterType=getMethodGenericParameterType(method, parameter);
+
+      if(genericParameterType instanceof ParameterizedType)
+      {
+        final Type actualType=((ParameterizedType)genericParameterType).getActualTypeArguments()[0];
+
+        concreteParameterType=(Class<?>)actualType;
+        parameterTypeHint=WebApplicationClientGeneratorPhp.PHP_TYPE_COLLECTION;
+
+        if(TYPE_TABLE_CONVERSION.containsKey(concreteParameterType))
+          parameterTypeDoc=TYPE_TABLE_CONVERSION.get(concreteParameterType).concat("[]");
+        else
+          parameterTypeDoc=getClazzName(concreteParameterType).concat("[]");
+
+        if(null!=parameterDefault)
+          parameterDefault=PHP_TYPE_COLLECTION_DEFAULT;
+      }
+    }
+    else if(parameterType.isArray())
+    {
+      parameterTypeHint=WebApplicationClientGeneratorPhp.PHP_TYPE_COLLECTION;
+      if(TYPE_TABLE_CONVERSION.containsKey(concreteParameterType))
+        parameterTypeDoc=TYPE_TABLE_CONVERSION.get(concreteParameterType).concat("[]");
+      else
+        parameterTypeDoc=getClazzName(concreteParameterType).concat("[]");
+
+      if(null!=parameterDefault)
+        parameterDefault=PHP_TYPE_COLLECTION_DEFAULT;
+    }
+    else if(TYPE_TABLE_CONVERSION.containsKey(concreteParameterType))
+    {
+      parameterTypeHint=null;
+      parameterTypeDoc=TYPE_TABLE_CONVERSION.get(concreteParameterType);
+    }
+
+    if(isJaxbType(concreteParameterType))
+    {
+      if(!application.getClasses().containsKey(getFileName(getClazzName(parameterType))))
+        addEntityType(application, resource, parameterType);
     }
 
     return (PhpClientResourceMethodParameter)resourceMethod.addParameter(
       new PhpClientResourceMethodParameter(
         getMethodParameterName(method, parameter),
-        parameterType.getSimpleName(),
-        parameterTypeName,
+        concreteParameterType,
+        parameterTypeHint,
+        parameterTypeDoc,
+        parameterDefault,
         isWebApplicationQueryParameter(method, parameter)
     ));
   }
 
-  public PhpClientClass generateEntityClass(final PhpClientApplication application,
+  public PhpClientClass addEntityType(final PhpClientApplication application,
+    final PhpClientResourceClass resource, final Class<?> clazz)
+  {
+    if(clazz.isEnum())
+      return addEnumeration(application, resource, clazz);
+
+    return addEntityClass(application, resource, clazz);
+  }
+
+  public PhpEnumeration addEnumeration(final PhpClientApplication application,
+    final PhpClientResourceClass resource, final Class<?> clazz)
+  {
+    final PhpEnumeration enumeration=new PhpEnumeration(
+      application, clazz, getClazzName(clazz), getFileName(getClazzName(clazz))
+    );
+
+    application.addClass(enumeration);
+    resource.addEntityClass(enumeration);
+
+    final XmlEnum xmlEnum=clazz.getAnnotation(XmlEnum.class);
+    final boolean numeric=AtomicInteger.class.equals(xmlEnum.value())
+      || AtomicLong.class.equals(xmlEnum.value())
+      || BigDecimal.class.equals(xmlEnum.value())
+      || BigInteger.class.equals(xmlEnum.value())
+      || Double.class.equals(xmlEnum.value())
+      || Float.class.equals(xmlEnum.value())
+      || Integer.class.equals(xmlEnum.value())
+      || Long.class.equals(xmlEnum.value())
+      || Short.class.equals(xmlEnum.value());
+
+    for(final Field field : clazz.getDeclaredFields())
+    {
+      final XmlEnumValue enumValue=field.getAnnotation(XmlEnumValue.class);
+
+      if(null==enumValue)
+        continue;
+
+      if(numeric)
+      {
+        enumeration.addConstant(new PhpClientClassConstant(field.getName(), enumValue.value()));
+      }
+      else
+      {
+        enumeration.addConstant(new PhpClientClassConstant(
+          field.getName(), "'"+enumValue.value()+"'"
+        ));
+      }
+    }
+
+    return enumeration;
+  }
+
+  public PhpClientClass addEntityClass(final PhpClientApplication application,
     final PhpClientResourceClass resource, final Class<?> clazz)
   {
     final PhpClientClass entityClazz=application.addClass(
-      new PhpClientClass(application, clazz, getEntityName(clazz), getEntityFileName(clazz))
+      new PhpClientClass(application, clazz, getClazzName(clazz), getFileName(getClazzName(clazz)))
     );
 
-    entityClazz.addInterface(CLASS_NAME_SERVICES_TRANSPORT_OBJECT);
+    entityClazz.addInterface(CLASS_OBJECT);
 
     resource.addEntityClass(entityClazz);
 
@@ -222,14 +343,6 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
 
     for(final Field field : clazz.getDeclaredFields())
     {
-      final XmlEnumValue enumValue=field.getAnnotation(XmlEnumValue.class);
-
-      if(null!=enumValue)
-        entityClazz.addConstant(new PhpClientClassConstant(field.getName(), enumValue.value()));
-
-      if(clazz.isEnum())
-        continue;
-
       if(Modifier.isStatic(field.getModifiers()) ||
         Modifier.isTransient(field.getModifiers()) ||
         null!=field.getAnnotation(XmlTransient.class))
@@ -240,135 +353,80 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
         XmlAccessType.FIELD!=accessType)
         continue;
 
-      final WebApplicationClientType webApplicationClientType=
-        field.getAnnotation(WebApplicationClientType.class);
-
       String fieldValue=null;
       String fieldTypeName=null;
 
-      if(ClassUtils.getAllInterfaces(field.getType()).contains(Iterable.class))
-      {
-        if(null==webApplicationClientType)
-        {
-          final Class<?> genericType=getGenericType(field);
+      final WebApplicationClientType webApplicationClientType=
+        field.getAnnotation(WebApplicationClientType.class);
 
-          if(null==genericType)
-          {
-            fieldTypeName=getEntityName(getGenericTypeName(field));
-          }
-          else
-          {
-            fieldTypeName=getEntityName(genericType);
-            if(!application.getClasses().containsKey(getEntityFileName(genericType)))
-              generateEntityClass(application, resource, genericType);
-          }
-        }
-        else
-        {
-          fieldTypeName=getEntityName(webApplicationClientType.value());
-        }
-
-        fieldValue=PHP_COLLECTION_WRAPPER_TYPE_INITIALIZATION;
-      }
-      else if(null!=webApplicationClientType)
+      if(null!=webApplicationClientType)
       {
-        String webApplicationClientTypeName=null;
         if(webApplicationClientType.value().isEmpty())
-          webApplicationClientTypeName=webApplicationClientType.type().value;
+          fieldTypeName=webApplicationClientType.type().value;
         else
-          webApplicationClientTypeName=webApplicationClientType.value();
-
-        String webApplicationClientTypeProperties="";
-        if(0<webApplicationClientType.properties().length)
-        {
-          webApplicationClientTypeProperties=String.format("|%1$s",
-            StringUtils.join(webApplicationClientType.properties(), "|")
-          );
-        }
-
-        if(null!=webApplicationClientTypeName && !webApplicationClientTypeName.isEmpty())
-          fieldTypeName=webApplicationClientTypeName.concat(webApplicationClientTypeProperties);
-      }
-      else if(isJaxbType(field.getType()))
-      {
-        fieldTypeName=getEntityName(field.getType());
-
-        if(!application.getClasses().containsKey(getEntityFileName(field.getType())))
-          generateEntityClass(application, resource, field.getType());
+          fieldTypeName=webApplicationClientType.value();
       }
 
-      if(null==fieldTypeName && TYPE_CONVERSION_TABLE.containsKey(field.getType()))
-        fieldTypeName=TYPE_CONVERSION_TABLE.get(field.getType());
+      if(null==fieldTypeName && TYPE_TABLE_CONVERSION.containsKey(field.getType()))
+        fieldTypeName=TYPE_TABLE_CONVERSION.get(field.getType());
 
       if(null==fieldTypeName)
         fieldTypeName=TYPE_CONVERSION_STRING;
 
+      if(isJaxbType(field.getType()))
+      {
+        fieldTypeName="\\".concat(NAMESPACE).concat("\\").concat(getClazzName(field.getType()));
+
+        if(!application.getClasses().containsKey(getFileName(getClazzName(field.getType()))))
+          addEntityType(application, resource, field.getType());
+      }
+
+      if(ClassUtils.getAllInterfaces(field.getType()).contains(Iterable.class) || field.getType().isArray())
+      {
+        final Type genericType=field.getGenericType();
+
+        if(genericType instanceof ParameterizedType)
+        {
+          final Class<?> actualType=(Class<?>)((ParameterizedType)genericType)
+            .getActualTypeArguments()[0];
+
+          if(TYPE_TABLE_CONVERSION.containsKey(actualType))
+            fieldTypeName=TYPE_TABLE_CONVERSION.get(actualType);
+          else
+            fieldTypeName=getClazzName(actualType);
+
+          if(isJaxbType(actualType))
+            fieldTypeName="\\".concat(NAMESPACE).concat("\\").concat(getClazzName(actualType));
+
+          if(!application.getClasses().containsKey(getFileName(getClazzName(actualType))))
+            addEntityType(application, resource, actualType);
+        }
+
+        fieldValue=PHP_TYPE_COLLECTION_DEFAULT;
+        fieldTypeName=fieldTypeName.concat("[]");
+      }
+
       entityClazz.addProperty(new PhpClientClassProperty(
-        getFieldName(field), fieldValue, fieldTypeName
+        getFieldName(field), getFieldNameMapped(field), fieldValue, fieldTypeName
       ));
     }
 
     return entityClazz;
   }
 
-  public PhpClientClass generateEntityClass(final PhpClientApplication application,
-    final PhpClientResourceClass resource, final String clazzName)
+  @Override
+  String getNamespace()
   {
-    try
-    {
-      return generateEntityClass(application, resource, Class.forName(clazzName));
-    }
-    catch(final ClassNotFoundException e)
-    {
-      return null;
-    }
+    return NAMESPACE;
   }
 
   @Override
-  String getPatternApplicationRootPath()
+  String getFileName(final String clazzName)
   {
-    return PATTERN_APPLICATION_ROOT_PATH;
-  }
+    final String scopedClazzName=clazzName.replaceFirst(applicationName.concat("_"), "");
 
-  @Override
-  String getApplicationFileName()
-  {
-    return APPLICATION_FILE_NAME;
-  }
-
-  @Override
-  String getPatternApplicationFileName()
-  {
-    return null;
-  }
-
-  @Override
-  String getPatternApplicationClassName()
-  {
-    return PATTERN_APPLICATION_CLASS_NAME;
-  }
-
-  @Override
-  String getPatternClassFile()
-  {
-    return PATTERN_CLASS_FILE;
-  }
-
-  @Override
-  String getPatternClassName()
-  {
-    return PATTERN_CLASS_NAME;
-  }
-
-  @Override
-  String getNamespaceResource()
-  {
-    return NAMESPACE_RESOURCE;
-  }
-
-  @Override
-  String getNamespaceEntity()
-  {
-    return NAMESPACE_ENTITY;
+    return CLASS_PATH.concat(URL_PATH_SEPARATOR)
+      .concat(scopedClazzName.replace("_", URL_PATH_SEPARATOR).toLowerCase())
+      .concat(".").concat(CLASS_FILE_EXTENSION);
   }
 }

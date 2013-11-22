@@ -4,11 +4,21 @@ package net.evalcode.services.http.internal.client;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.OPTIONS;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -18,6 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import net.evalcode.services.http.annotation.client.WebApplicationClientType;
 import org.apache.commons.lang.StringUtils;
+import com.google.common.collect.Lists;
 
 
 /**
@@ -35,11 +46,13 @@ public abstract class WebApplicationClientGenerator
   static final String TYPE_CONVERSION_INT="int";
   static final String TYPE_CONVERSION_STRING="string";
 
-  static final Map<Class<?>, String> TYPE_CONVERSION_TABLE=new HashMap<Class<?>, String>() {{
+  public static final Map<Class<?>, String> TYPE_TABLE_CONVERSION=new HashMap<Class<?>, String>() {{
+      put(boolean.class, TYPE_CONVERSION_BOOL);
       put(Boolean.class, TYPE_CONVERSION_BOOL);
       put(boolean.class, TYPE_CONVERSION_BOOL);
       put(Byte.class, TYPE_CONVERSION_INT);
       put(byte.class, TYPE_CONVERSION_INT);
+      put(BigDecimal.class, TYPE_CONVERSION_FLOAT);
       put(Character.class, TYPE_CONVERSION_INT);
       put(char.class, TYPE_CONVERSION_INT);
       put(Double.class, TYPE_CONVERSION_FLOAT);
@@ -52,6 +65,7 @@ public abstract class WebApplicationClientGenerator
       put(long.class, TYPE_CONVERSION_INT);
       put(Short.class, TYPE_CONVERSION_INT);
       put(short.class, TYPE_CONVERSION_INT);
+      put(String.class, TYPE_CONVERSION_STRING);
     }
     private static final long serialVersionUID=1L;
   };
@@ -112,20 +126,8 @@ public abstract class WebApplicationClientGenerator
    * TODO Create base class for result.
    */
   abstract Object generateApplicationClient();
+  abstract String getNamespace();
 
-  abstract String getPatternApplicationRootPath();
-  abstract String getPatternApplicationClassName();
-  abstract String getPatternApplicationFileName();
-  abstract String getPatternClassName();
-  abstract String getPatternClassFile();
-  abstract String getNamespaceResource();
-  abstract String getNamespaceEntity();
-
-
-  String getApplicationFilePath()
-  {
-    return String.format(getPatternApplicationRootPath(), getApplicationName());
-  }
 
   String getApplicationUrl()
   {
@@ -137,62 +139,66 @@ public abstract class WebApplicationClientGenerator
     return getContextPath();
   }
 
-  String getApplicationClassName()
+  String getClazzName(final Class<?> clazz)
   {
-    return String.format(getPatternApplicationClassName(), getApplicationName());
+    final WebApplicationClientType type=clazz.getAnnotation(WebApplicationClientType.class);
+
+    if(null!=type && null!=type.value())
+      return getClazzName(type.value());
+
+    Class<?> enclosingClazz=clazz.getEnclosingClass();
+
+    final List<String> list=new ArrayList<>();
+    final StringBuffer fqn=new StringBuffer();
+
+    list.add(clazz.getSimpleName());
+
+    while(null!=enclosingClazz)
+    {
+      list.add(enclosingClazz.getSimpleName());
+      enclosingClazz=enclosingClazz.getEnclosingClass();
+    }
+
+    final List<String> path=Lists.reverse(list);
+
+    for(final String node : path)
+      fqn.append(node);
+
+    return getClazzName(fqn.toString());
   }
 
-  String getApplicationFileName()
+  String getClazzName(final String clazzName)
   {
-    return String.format(getPatternApplicationFileName(), getApplicationName());
+    final StringBuffer stringBuffer=new StringBuffer(clazzName.length()+5);
+
+    stringBuffer.append(applicationName);
+    stringBuffer.append("_");
+
+    int i=0;
+
+    for(final byte b : clazzName.getBytes())
+    {
+      final char c=(char)b;
+
+      if(++i==1)
+      {
+        stringBuffer.append(Character.toUpperCase(c));
+      }
+      else
+      {
+        if(Character.isUpperCase(c))
+          stringBuffer.append("_");
+
+        stringBuffer.append(c);
+      }
+    }
+
+    return stringBuffer.toString();
   }
 
-  String getEntityName(final Class<?> entity)
+  String getFileName(final String clazzName)
   {
-    String entityClazzName=entity.getSimpleName();
-    if(null!=entity.getAnnotation(WebApplicationClientType.class))
-      entityClazzName=entity.getAnnotation(WebApplicationClientType.class).value();
-
-    return getEntityName(entityClazzName);
-  }
-
-  String getEntityName(final String entityClazzName)
-  {
-    return String.format(getPatternClassName(),
-      StringUtils.capitalize(getApplicationName()),
-      StringUtils.capitalize(getNamespaceEntity()),
-      StringUtils.capitalize(entityClazzName)
-    );
-  }
-
-  String getEntityFileName(final Class<?> entity)
-  {
-    String entityClazzName=entity.getSimpleName();
-    if(null!=entity.getAnnotation(WebApplicationClientType.class))
-      entityClazzName=entity.getAnnotation(WebApplicationClientType.class).value();
-
-    return String.format(getPatternClassFile(),
-      StringUtils.uncapitalize(getNamespaceEntity()),
-      StringUtils.uncapitalize(entityClazzName)
-    );
-  }
-
-  String getResourceName(final Class<?> resource)
-  {
-    String resourceClazzName=resource.getSimpleName();
-    if(null!=resource.getAnnotation(WebApplicationClientType.class))
-      resourceClazzName=resource.getAnnotation(WebApplicationClientType.class).value();
-
-    return getResourceName(resourceClazzName);
-  }
-
-  String getResourceName(final String resourceClazzName)
-  {
-    return String.format(getPatternClassName(),
-      StringUtils.capitalize(getApplicationName()),
-      StringUtils.capitalize(getNamespaceResource()),
-      StringUtils.capitalize(resourceClazzName)
-    );
+    return clazzName.replace("_", URL_PATH_SEPARATOR).toLowerCase();
   }
 
   Class<?> getGenericType(final Field field)
@@ -212,18 +218,6 @@ public abstract class WebApplicationClientGenerator
     return StringUtils.substringBetween(field.getGenericType().toString(), "<", ">");
   }
 
-  String getResourceFileName(final Class<?> resource)
-  {
-    String resourceClazzName=resource.getSimpleName();
-    if(null!=resource.getAnnotation(WebApplicationClientType.class))
-      resourceClazzName=resource.getAnnotation(WebApplicationClientType.class).value();
-
-    return String.format(getPatternClassFile(),
-      StringUtils.uncapitalize(getNamespaceResource()),
-      StringUtils.uncapitalize(resourceClazzName)
-    );
-  }
-
   String getResourceUrlPath(final Class<?> resource)
   {
     return getUrlPath(resource.getAnnotation(Path.class));
@@ -234,15 +228,40 @@ public abstract class WebApplicationClientGenerator
     return method.getName();
   }
 
+  String getHttpMethod(final Method method)
+  {
+    if(null!=method.getAnnotation(PUT.class))
+      return "PUT";
+
+    if(null!=method.getAnnotation(POST.class))
+      return "POST";
+
+    if(null!=method.getAnnotation(HEAD.class))
+      return "HEAD";
+
+    if(null!=method.getAnnotation(OPTIONS.class))
+      return "OPTIONS";
+
+    if(null!=method.getAnnotation(DELETE.class))
+      return "DELETE";
+
+    return "GET";
+  }
+
   String getMethodUrlPath(final Method method)
   {
-    return getUrlPath(method.getAnnotation(Path.class));
+    final Path path=method.getAnnotation(Path.class);
+
+    if(null==path)
+      return null;
+
+    return getUrlPath(path);
   }
 
   String getUrlPath(final Path path)
   {
-    if(0!=path.value().indexOf(URL_PATH_SEPARATOR))
-      return URL_PATH_SEPARATOR.concat(path.value());
+    if(0==path.value().indexOf(URL_PATH_SEPARATOR))
+      return path.value().substring(1);
 
     return path.value();
   }
@@ -250,6 +269,11 @@ public abstract class WebApplicationClientGenerator
   Class<?> getMethodParameterType(final Method method, final int parameter)
   {
     return method.getParameterTypes()[parameter];
+  }
+
+  Type getMethodGenericParameterType(final Method method, final int parameter)
+  {
+    return method.getGenericParameterTypes()[parameter];
   }
 
   String getMethodParameterName(final Method method, final int parameter)
@@ -273,17 +297,28 @@ public abstract class WebApplicationClientGenerator
 
   String getFieldName(final Field field)
   {
+    return field.getName();
+  }
+
+  String getFieldNameMapped(final Field field)
+  {
     final XmlElement xmlElement=field.getAnnotation(XmlElement.class);
 
     if(null==xmlElement || null==xmlElement.name())
       return field.getName();
 
-    return underscoreToCamelCase(xmlElement.name());
+    return xmlElement.name();
   }
 
   boolean isWebApplicationMethod(final Method method)
   {
-    return null!=method.getAnnotation(Path.class);
+    return null!=method.getAnnotation(Path.class)
+      || null!=method.getAnnotation(HEAD.class)
+      || null!=method.getAnnotation(OPTIONS.class)
+      || null!=method.getAnnotation(GET.class)
+      || null!=method.getAnnotation(PUT.class)
+      || null!=method.getAnnotation(POST.class)
+      || null!=method.getAnnotation(DELETE.class);
   }
 
   boolean isWebApplicationMethodParameter(final Method method, final int parameter)

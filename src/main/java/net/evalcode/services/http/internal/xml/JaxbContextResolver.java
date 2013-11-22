@@ -15,6 +15,8 @@ import net.evalcode.javax.xml.bind.XmlSet;
 import net.evalcode.services.http.exception.ServiceUnavailableException;
 import net.evalcode.services.http.util.xml.DateXmlAdapter;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.inject.Injector;
 
 
@@ -23,6 +25,8 @@ import com.google.inject.Injector;
 public class JaxbContextResolver implements ContextResolver<JAXBContext>
 {
   // PREDEFINED PROPERTIES
+  static final Logger LOG=LoggerFactory.getLogger(JaxbContextResolver.class);
+
   static final Class<?>[] BUILTIN=new Class<?>[] {
     XmlSet.class,
     XmlList.class,
@@ -78,6 +82,8 @@ public class JaxbContextResolver implements ContextResolver<JAXBContext>
           }
           catch(final JAXBException e)
           {
+            LOG.error(e.getMessage(), e);
+
             throw new ServiceUnavailableException(e.getMessage(), e);
           }
         }

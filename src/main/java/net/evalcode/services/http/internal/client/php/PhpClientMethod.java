@@ -85,7 +85,7 @@ public class PhpClientMethod
 
     stringBuffer.append(getPhpDoc());
     stringBuffer.append(getSignature());
-    stringBuffer.append("    {\n");
+    stringBuffer.append("    {");
     stringBuffer.append(getBody());
     stringBuffer.append("    }\n");
 
@@ -118,7 +118,7 @@ public class PhpClientMethod
     for(final PhpClientMethodParameter parameter : parameters)
     {
       if(parameter.assignMember())
-        stringBuffer.append(String.format("      $this->m_%1$s=$%1$s_;\n", parameter.getName()));
+        stringBuffer.append(String.format("      $this->m_%1$s=$%1$s_;\n", parameter.getNameCamelCase()));
     }
 
     if(null!=body)
@@ -143,7 +143,7 @@ public class PhpClientMethod
       for(final PhpClientMethodParameter parameter : getParameters())
       {
         stringBuffer.append(String.format("     * @param %1$s $%2$s_\n",
-          parameter.getPhpDocType(), parameter.getName()
+          parameter.getPhpDocType(), parameter.getNameCamelCase()
         ));
       }
     }

@@ -28,9 +28,6 @@ public class PhpClientClass
   static final String SECTION_PREDEFINED_PROPERTIES="PREDEFINED PROPERTIES";
   static final String SECTION_PROPERTIES="PROPERTIES";
   static final String SECTION_SEPARATOR_CHARACTER="-";
-  static final String KEY_CLASS_NAME="%CLASS_NAME%";
-  static final String KEY_CLASS_AUTHOR="%CLASS_AUTHOR%";
-  static final String KEY_CLASS_PACKAGE="%CLASS_PACKAGE%";
   static final int LINE_INDENTATION_1=2;
   static final int LINE_INDENTATION_2=4;
   static final int SECTION_SEPARATOR_LENGTH=74;
@@ -76,6 +73,21 @@ public class PhpClientClass
     return name;
   }
 
+  public String getNamespace()
+  {
+    return String.format("namespace %1$s;", WebApplicationClientGeneratorPhp.NAMESPACE);
+  }
+
+  public String getPackageName()
+  {
+    return application.getPackageName();
+  }
+
+  public String getSubPackageName()
+  {
+    return application.getSubPackageName(name);
+  }
+
   public String getFileName()
   {
     return fileName;
@@ -116,6 +128,8 @@ public class PhpClientClass
     final StringBuffer stringBuffer=new StringBuffer(512);
 
     stringBuffer.append(PHP_OPEN);
+    stringBuffer.append(StringUtils.repeat(LINE_ENDING, INITIAL_LINE_SPACING));
+    stringBuffer.append(getNamespace());
     stringBuffer.append(StringUtils.repeat(LINE_ENDING, INITIAL_LINE_SPACING));
     stringBuffer.append(getPhpDoc());
     stringBuffer.append(getSignature());
@@ -199,21 +213,24 @@ public class PhpClientClass
     return String.format("  class %1$s\n", getName());
   }
 
+  // FIXME Get author/doc of original type.
   String getPhpDoc()
   {
     final StringBuffer stringBuffer=new StringBuffer();
-
-    final String applicationName=String.format(
-      WebApplicationClientGeneratorPhp.PATTERN_APPLICATION_ROOT_PATH, application.getName()
-    );
+    final String subPackageName=getSubPackageName();
 
     stringBuffer.append("  /**\n");
     stringBuffer.append(String.format("   * %1$s\n", getName()));
     stringBuffer.append("   *\n");
-    stringBuffer.append(String.format("   * @package %1$s\n", applicationName));
-    stringBuffer.append(
-      String.format("   * @subpackage %1$s\n", PhpClientApplication.DEFAULT_CLASS_PACKAGE)
-    );
+    stringBuffer.append(String.format("   * @package %1$s\n", getPackageName()));
+
+    if(null!=subPackageName)
+    {
+      stringBuffer.append(
+        String.format("   * @subpackage %1$s\n", getSubPackageName())
+      );
+    }
+
     stringBuffer.append("   *\n");
     stringBuffer.append(
       String.format("   * @author %1$s\n", PhpClientApplication.DEFAULT_CLASS_AUTHOR)
@@ -228,6 +245,24 @@ public class PhpClientClass
     final StringBuffer stringBuffer=new StringBuffer();
 
     if(1>methods.size())
+      return "";
+
+    boolean hasMembers=false;
+
+    for(final PhpClientMethod method : methods)
+    {
+      for(final PhpClientMethodParameter parameter : method.getParameters())
+      {
+        if(parameter.assignMember())
+        {
+          hasMembers=true;
+
+          break;
+        }
+      }
+    }
+
+    if(!hasMembers)
       return "";
 
     stringBuffer.append(StringUtils.repeat(LINE_ENDING, 2));

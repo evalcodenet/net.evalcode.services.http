@@ -11,7 +11,12 @@ public class PhpClientClassConstant extends PhpClientClassProperty
   // CONSTRUCTION
   public PhpClientClassConstant(final String name, final String value)
   {
-    super(name, value);
+    super(name, name, value);
+  }
+
+  public PhpClientClassConstant(final String name, final String value, final String type)
+  {
+    super(name, name, value, type);
   }
 
 

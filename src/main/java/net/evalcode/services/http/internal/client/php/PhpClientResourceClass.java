@@ -3,7 +3,6 @@ package net.evalcode.services.http.internal.client.php;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 
 
 /**
@@ -37,7 +36,7 @@ public class PhpClientResourceClass extends PhpClientClass
   public String getPath(final boolean full)
   {
     if(full)
-      return application.getPath().concat(path);
+      return application.getPath().concat("/").concat(path);
 
     return path;
   }
@@ -69,10 +68,7 @@ public class PhpClientResourceClass extends PhpClientClass
   String getPhpDoc()
   {
     final StringBuffer stringBuffer=new StringBuffer(128);
-
-    final String applicationName=String.format(
-      WebApplicationClientGeneratorPhp.PATTERN_APPLICATION_ROOT_PATH, application.getName()
-    );
+    final String subPackageName=getSubPackageName();
 
     stringBuffer.append("  /**\n");
     stringBuffer.append(String.format("   * %1$s\n", getName()));
@@ -80,14 +76,19 @@ public class PhpClientResourceClass extends PhpClientClass
     if(null!=getPath())
     {
       stringBuffer.append("   *\n");
-      stringBuffer.append(String.format("   * uri: %1$s\n", getPath()));
+      stringBuffer.append(String.format("   * @Path(%1$s)\n", getPath()));
     }
 
     stringBuffer.append("   *\n");
-    stringBuffer.append(String.format("   * @package %1$s\n", applicationName));
-    stringBuffer.append(
-      String.format("   * @subpackage %1$s\n", PhpClientApplication.DEFAULT_CLASS_PACKAGE)
-    );
+    stringBuffer.append(String.format("   * @package %1$s\n", getPackageName()));
+
+    if(null!=subPackageName)
+    {
+      stringBuffer.append(
+        String.format("   * @subpackage %1$s\n", getSubPackageName())
+      );
+    }
+
     stringBuffer.append("   *\n");
     stringBuffer.append(
       String.format("   * @author %1$s\n", PhpClientApplication.DEFAULT_CLASS_AUTHOR)

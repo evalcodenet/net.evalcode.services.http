@@ -1,7 +1,6 @@
 package net.evalcode.services.http.service.rest;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
@@ -85,19 +84,13 @@ public class WebApplicationClientGeneratorResource
         final PhpClientApplication client=phpClientGenerator.generateApplicationClient();
         final ZipOutputStream zip=new ZipOutputStream(outputStream);
 
-        final String path=client.getFilePath().concat(File.separator)
-          .concat("lib").concat(File.separator);
-
-        appendToZip(zip, path.concat(client.getApplicationClass().getFileName()),
-          client.getApplicationClass().toString());
-
         for(final PhpClientClass clientClazz : client.getClasses().values())
         {
           LOG.debug("Appending file to web application client [file: {}].",
             clientClazz.getFileName()
           );
 
-          appendToZip(zip, path.concat(clientClazz.getFileName()), clientClazz.toString());
+          appendToZip(zip, clientClazz.getFileName(), clientClazz.toString());
         }
 
         zip.flush();

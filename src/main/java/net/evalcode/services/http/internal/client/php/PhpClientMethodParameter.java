@@ -1,8 +1,7 @@
 package net.evalcode.services.http.internal.client.php;
 
-import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 
-
+import net.evalcode.services.http.annotation.client.WebApplicationClientType;
 
 
 /**
@@ -12,27 +11,39 @@ import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorP
  */
 public class PhpClientMethodParameter
 {
+  // PREDEFINED PROPERTIES
+  static final char[] mapToCamelCase=new char[] {
+    '-',
+    '_'
+  };
+
+
   // MEMBERS
   final boolean assignMember;
   final boolean optional;
+  final Class<?> type;
   final String name;
-  final String type;
   final String typeHint;
+  final String typeDoc;
+  final String defaultValue;
 
 
   // CONSTRUCTION
-  public PhpClientMethodParameter(final String name, final String type,
-    final String typeHint, final boolean assignMember)
+  public PhpClientMethodParameter(final String name, final  Class<?> type,
+    final String typeHint, final String typeDoc, final String defaultValue, final boolean assignMember)
   {
-    this(name, type, typeHint, assignMember, false);
+    this(name, type, typeHint, typeDoc, defaultValue, assignMember, false);
   }
 
-  public PhpClientMethodParameter(final String name, final String type,
-    final String typeHint, final boolean assignMember, final boolean optional)
+  public PhpClientMethodParameter(final String name, final  Class<?> type,
+    final String typeHint, final String typeDoc, final String defaultValue,
+    final boolean assignMember, final boolean optional)
   {
     this.name=name;
     this.type=type;
     this.typeHint=typeHint;
+    this.typeDoc=typeDoc;
+    this.defaultValue=defaultValue;
     this.assignMember=assignMember;
     this.optional=optional;
   }
@@ -44,9 +55,50 @@ public class PhpClientMethodParameter
     return name;
   }
 
+  public String getNameCamelCase()
+  {
+    final StringBuffer stringBuffer=new StringBuffer(name.length());
+
+    boolean uppercase=false;
+
+    for(final byte b : name.getBytes())
+    {
+      final char c=(char)b;
+
+      if(uppercase)
+      {
+        stringBuffer.append(Character.toUpperCase(c));
+        uppercase=false;
+
+        continue;
+      }
+
+      for(final char map : mapToCamelCase)
+      {
+        if(c==map)
+        {
+          uppercase=true;
+
+          break;
+        }
+      }
+
+      if(uppercase)
+        continue;
+
+      stringBuffer.append(c);
+    }
+
+    return stringBuffer.toString();
+  }
+
   public String getType()
   {
-    return type;
+    String clazzName=type.getSimpleName();
+    if(null!=type.getAnnotation(WebApplicationClientType.class))
+      return type.getAnnotation(WebApplicationClientType.class).value();
+
+    return clazzName;
   }
 
   public String getTypeHint()
@@ -56,13 +108,7 @@ public class PhpClientMethodParameter
 
   public String getPhpDocType()
   {
-    if(WebApplicationClientGeneratorPhp.PHP_COLLECTION_WRAPPER_TYPE_NAME.equals(getTypeHint()))
-      return WebApplicationClientGeneratorPhp.PHP_COLLECTION_WRAPPER_TYPE_PHPDOC;
-
-    if(null==getTypeHint())
-      return getType();
-
-    return getTypeHint();
+    return typeDoc;
   }
 
   public boolean assignMember()
@@ -75,15 +121,9 @@ public class PhpClientMethodParameter
     return optional;
   }
 
-  public String getInitialValue()
+  public String getDefaultValue()
   {
-    if(!isOptional())
-      return null;
-
-    if(WebApplicationClientGeneratorPhp.PHP_COLLECTION_WRAPPER_TYPE_NAME.equals(getTypeHint()))
-      return WebApplicationClientGeneratorPhp.PHP_COLLECTION_WRAPPER_TYPE_INITIALIZATION;
-
-    return WebApplicationClientGeneratorPhp.PHP_DEFAULT_TYPE_INITIALIZATION;
+    return defaultValue;
   }
 
 
@@ -94,7 +134,7 @@ public class PhpClientMethodParameter
     final StringBuilder stringBuilder=new StringBuilder();
 
     final String typeHint=getTypeHint();
-    final String initialValue=getInitialValue();
+    final String defaultValue=getDefaultValue();
 
     if(null!=typeHint)
     {
@@ -102,12 +142,12 @@ public class PhpClientMethodParameter
       stringBuilder.append(" ");
     }
 
-    stringBuilder.append(String.format("$%1$s_", getName()));
+    stringBuilder.append(String.format("$%1$s_", getNameCamelCase()));
 
-    if(null!=initialValue)
+    if(null!=defaultValue)
     {
       stringBuilder.append("=");
-      stringBuilder.append(initialValue);
+      stringBuilder.append(defaultValue);
     }
 
     return stringBuilder.toString();

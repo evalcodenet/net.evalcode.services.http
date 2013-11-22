@@ -13,26 +13,21 @@ import java.util.Map;
 public class PhpClientApplication
 {
   // PREDEFINED PROPERTIES
-  static final String DEFAULT_CLASS_PACKAGE="lib";
   static final String DEFAULT_CLASS_AUTHOR="evalcode.net";
 
 
   // MEMBERS
   final Map<String, PhpClientClass> clazzes=new HashMap<>();
+
   final String name;
   final String url;
   final String path;
-  final String filePath;
-
-  PhpClientApplicationClass applicationClazz;
 
 
   // CONSTRUCTION
-  public PhpClientApplication(final String name, final String filePath,
-    final String path, final String url)
+  public PhpClientApplication(final String name, final String path, final String url)
   {
     this.name=name;
-    this.filePath=filePath;
     this.path=path;
     this.url=url;
   }
@@ -44,9 +39,37 @@ public class PhpClientApplication
     return name;
   }
 
-  public String getFilePath()
+  public String getPackageName()
   {
-    return filePath;
+    return name.replace("_", ".").toLowerCase();
+  }
+
+  public String getSubPackageName(final String clazzName)
+  {
+    if(-1==clazzName.indexOf("_"))
+      return null;
+
+    final String[] chunks=clazzName.split("_");
+
+    if(2==chunks.length)
+      return null;
+
+    final String[] chunksPackage=new String[chunks.length-2];
+    System.arraycopy(chunks, 1, chunksPackage, 0, chunksPackage.length);
+
+    final StringBuffer stringBuffer=new StringBuffer(clazzName.length());
+
+    int i=0;
+
+    for(final String chunk : chunksPackage)
+    {
+      if(1<++i)
+        stringBuffer.append(".");
+
+      stringBuffer.append(chunk.toLowerCase());
+    }
+
+    return stringBuffer.toString();
   }
 
   public String getPath()
@@ -70,23 +93,5 @@ public class PhpClientApplication
   public Map<String, PhpClientClass> getClasses()
   {
     return clazzes;
-  }
-
-  public PhpClientApplicationClass getApplicationClass()
-  {
-    return applicationClazz;
-  }
-
-  public void setApplicationClass(final PhpClientApplicationClass applicationClazz)
-  {
-    this.applicationClazz=applicationClazz;
-  }
-
-
-  // OVERRIDES/IMPLEMENTS
-  @Override
-  public String toString()
-  {
-    return applicationClazz.toString();
   }
 }

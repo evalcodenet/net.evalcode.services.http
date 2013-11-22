@@ -36,6 +36,7 @@ public @interface WebApplicationClientType
   public static enum Type
   {
     // PREDEFINED TYPES
+    ARRAY("Components\\HashMap"),
     BOOL("Components\\Boolean"),
     INT("Components\\Integer"),
     FLOAT("Components\\Float"),
