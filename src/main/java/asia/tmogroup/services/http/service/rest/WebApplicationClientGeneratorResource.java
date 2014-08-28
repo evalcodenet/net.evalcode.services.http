@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
@@ -48,6 +49,7 @@ public class WebApplicationClientGeneratorResource
 
   // ACCESSORS/MUTATORS
   @GET
+  @PermitAll
   @Path(/*http/rest/client*/"php.zip")
   @Produces({MediaType.APPLICATION_OCTET_STREAM})
   public StreamingOutput getPhpClient()

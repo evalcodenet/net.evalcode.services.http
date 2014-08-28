@@ -1,9 +1,11 @@
 package net.evalcode.services.http.internal.servlet.ioc;
 
 
-import javax.annotation.security.DenyAll;
+import java.util.Set;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
-import net.evalcode.services.http.exception.ForbiddenException;
+import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import com.google.inject.Injector;
@@ -32,17 +34,31 @@ public class SecurityManagerInterceptor implements MethodInterceptor
   @Override
   public Object invoke(final MethodInvocation methodInvocation) throws Throwable
   {
-    provider.get().getInstance(HttpServletRequest.class).getSession();
+    if(null!=methodInvocation.getMethod().getAnnotation(PermitAll.class))
+      return methodInvocation.proceed();
 
-    if(null!=methodInvocation.getMethod().getAnnotation(DenyAll.class))
+    final RolesAllowed rolesAllowed=methodInvocation.getMethod().getAnnotation(RolesAllowed.class);
+
+    if(null!=rolesAllowed)
     {
-      throw new ForbiddenException(String.format(
-        "Method invocation of %1$s is not allowed.", methodInvocation.getMethod().getName()
-      ));
+      final HttpServletRequest httpServletRequest=provider.get().getInstance(HttpServletRequest.class);
+
+      @SuppressWarnings("unchecked")
+      final Set<String> roles=(Set<String>)httpServletRequest.getSession().getAttribute("roles");
+
+      if(null!=roles)
+      {
+        for(final String role : rolesAllowed.value())
+        {
+          if(roles.contains(role))
+            return methodInvocation.proceed();
+        }
+      }
     }
 
-    // TODO Implement @RolesAllowed to enforce authentication by declaration
+    provider.get().getInstance(HttpServletResponse.class)
+      .sendError(403, "HTTP/1.1 403 Forbidden");
 
-    return methodInvocation.proceed();
+    return null;
   }
 }

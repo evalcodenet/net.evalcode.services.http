@@ -14,23 +14,23 @@ import org.apache.commons.lang.StringUtils;
 
 
 /**
- * JavaScriptCallbackServletFilter
+ * JsonpServletFilter
  *
  * <p> Work-around for "Same Origin Policy".
- * <p> Enables cross-site requests for net.evalcode.services HTTP/REST+JSON services.
+ * <p> Enables cross-site requests for net.evalcode.services HTTP(S)/REST+JSON services.
  *
  * <pre>
  *   <script type="text/javascript">
  *
- *     // [1] JSON response callback.
+ *     // [1] JSONP callback.
  *     myCallback=function(json)
  *     {
  *       alert(json);
  *     }
  *
- *     // [2] create script-tag pointing to REST+JSON service.
+ *     // [2] create script-tag pointing to REST+JSONP service.
  *     var script=document.createElement("script");
- *     script.setAttribute("src", "http://domain.tld/path?append-js-callback=myCallback");
+ *     script.setAttribute("src", "http://domain.tld/path?jsonp=myCallback");
  *     script.setAttribute("type", "text/javascript");
  *
  *     // [3] append script-tag.
@@ -39,7 +39,7 @@ import org.apache.commons.lang.StringUtils;
  *
  *   The browser will request the REST service for given url in listed script-tag
  *   and execute the javascript callback specified by optional query parameter
- *   "append-js-callback", by passing it the actual response.
+ *   "jsonp", by passing it the actual response.
  * <pre>
  *
  * TODO Check ResponseListener - maybe better solution.
@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
  * @author carsten.schipke@gmail.com
  */
 @Singleton
-public class JavaScriptCallbackServletFilter implements Filter
+public class JsonpServletFilter implements Filter
 {
   // OVERRIDES/IMPLEMENTS
   @Override
@@ -56,21 +56,23 @@ public class JavaScriptCallbackServletFilter implements Filter
     throws IOException, ServletException
   {
     String callback=StringUtils.substringAfterLast(
-      ((HttpServletRequest)servletRequest).getQueryString(), "append-js-callback="
+      ((HttpServletRequest)servletRequest).getQueryString(), "jsonp="
     );
 
     callback=StringUtils.substringBefore(callback, "&");
 
-    boolean appendJsCallback=false;
+    boolean jsonp=false;
+
     if(null!=callback && !callback.isEmpty())
     {
       servletResponse.getOutputStream().write(callback.concat("(").getBytes());
-      appendJsCallback=true;
+
+      jsonp=true;
     }
 
     filterChain.doFilter(servletRequest, servletResponse);
 
-    if(appendJsCallback)
+    if(jsonp)
       servletResponse.getOutputStream().write(");".getBytes());
   }
 

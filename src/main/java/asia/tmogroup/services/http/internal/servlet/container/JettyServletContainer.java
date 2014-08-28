@@ -3,6 +3,7 @@ package net.evalcode.services.http.internal.servlet.container;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,11 +11,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
-import net.evalcode.services.http.internal.servlet.ServletContainer;
-import net.evalcode.services.http.service.HttpService;
-import net.evalcode.services.http.service.HttpServiceServletModule;
-import net.evalcode.services.http.service.xml.HttpConnector;
-import net.evalcode.services.http.service.xml.HttpConnectors;
+import org.eclipse.jetty.plus.jaas.JAASLoginService;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
@@ -26,6 +24,11 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.osgi.framework.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.evalcode.services.http.internal.servlet.ServletContainer;
+import net.evalcode.services.http.service.HttpService;
+import net.evalcode.services.http.service.HttpServiceServletModule;
+import net.evalcode.services.http.service.xml.HttpConnector;
+import net.evalcode.services.http.service.xml.HttpConnectors;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -239,6 +242,7 @@ public class JettyServletContainer implements ServletContainer
     final SslSelectChannelConnector sslSelectChannelConnector=new SslSelectChannelConnector();
 
     LOG.info("ssl connector: {}", httpConnector);
+
     sslSelectChannelConnector.setHost(httpConnector.getHost());
     sslSelectChannelConnector.setPort(httpConnector.getPort());
 
@@ -265,16 +269,39 @@ public class JettyServletContainer implements ServletContainer
   private void addServletContext(final HttpService httpService)
   {
     final HttpServiceServletModule servletModule=httpService.getServletModule();
+    final String servletContextResourcePath=servletModule.getResourcePath();
+    final String servletContextRealm=servletModule.getSecurityRealm();
+
+    int servletContextHandlerFlags=0;
+
+    // TODO JAAS without sessions.
+    if(null!=servletContextRealm)
+      servletContextHandlerFlags=ServletContextHandler.SESSIONS|ServletContextHandler.SECURITY;
+    else if(!servletModule.isStateless())
+      servletContextHandlerFlags=ServletContextHandler.SESSIONS;
 
     final ServletContextHandler servletContextHandler=new ServletContextHandler(
-      contextHandlerContainer,
-      servletModule.getContextPath(),
-      ServletContextHandler.SESSIONS+ServletContextHandler.SECURITY
+      contextHandlerContainer, servletModule.getContextPath(), servletContextHandlerFlags
     );
 
-    final String contextResourcePath=servletModule.getResourcePath();
+    if(null!=servletContextRealm)
+    {
+      final JAASLoginService jaasLoginService=new JAASLoginService(servletContextRealm);
+      jaasLoginService.setLoginModuleName(servletContextRealm);
 
-    if(null==contextResourcePath)
+      final ConstraintSecurityHandler constraintSecurityHandler=new ConstraintSecurityHandler();
+      constraintSecurityHandler.setLoginService(jaasLoginService);
+      constraintSecurityHandler.setAuthMethod(servletModule.getSecurityAuthMethod());
+
+      final Map<String, String> authTypeProperties=servletModule.getSecurityInitParameters();
+
+      for(final String key : authTypeProperties.keySet())
+        constraintSecurityHandler.setInitParameter(key, authTypeProperties.get(key));
+
+      servletContextHandler.setSecurityHandler(constraintSecurityHandler);
+    }
+
+    if(null==servletContextResourcePath)
     {
       LOG.info("No static resources for context [context-path: {}].",
         servletModule.getContextPath()
@@ -284,10 +311,10 @@ public class JettyServletContainer implements ServletContainer
     {
       try
       {
-        servletContextHandler.setBaseResource(Resource.newResource(contextResourcePath));
+        servletContextHandler.setBaseResource(Resource.newResource(servletContextResourcePath));
 
         LOG.info("Found static resources for context [context-path: {}, resource-path: {}].",
-          servletModule.getContextPath(), contextResourcePath
+          servletModule.getContextPath(), servletContextResourcePath
         );
       }
       catch(final IOException e)

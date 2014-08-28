@@ -2,6 +2,7 @@ package net.evalcode.services.http.service;
 
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -13,7 +14,7 @@ import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorP
 import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
 import net.evalcode.services.http.internal.servlet.container.CustomGuiceContainer;
 import net.evalcode.services.http.internal.servlet.exception.NotFoundExceptionMapper;
-import net.evalcode.services.http.internal.servlet.filter.JavaScriptCallbackServletFilter;
+import net.evalcode.services.http.internal.servlet.filter.JsonpServletFilter;
 import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
@@ -68,6 +69,30 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     return null;
   }
 
+  public String getSecurityRealm()
+  {
+    return null;
+  }
+
+  public String getSecurityAuthMethod()
+  {
+    return "FORM";
+  }
+
+  public Map<String, String> getSecurityInitParameters()
+  {
+    final Map<String, String> parameters=new HashMap<>();
+    parameters.put("form-login-page", "/login");
+    parameters.put("form-error-page", "/error");
+
+    return parameters;
+  }
+
+  public boolean isStateless()
+  {
+    return true;
+  }
+
 
   // IMPLEMENTATION
   @Override
@@ -112,9 +137,9 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       new TransactionManagerInterceptor(getProvider(Injector.class))
     );
 
-    final Matcher securityAnnotationsMatcher=Matchers.annotatedWith(RolesAllowed.class)
-      .or(Matchers.annotatedWith(DenyAll.class))
-      .or(Matchers.annotatedWith(PermitAll.class));
+    final Matcher securityAnnotationsMatcher=Matchers.annotatedWith(DenyAll.class)
+      .or(Matchers.annotatedWith(PermitAll.class))
+      .or(Matchers.annotatedWith(RolesAllowed.class));
 
     bindInterceptor(Matchers.any(), securityAnnotationsMatcher,
       new SecurityManagerInterceptor(getProvider(Injector.class))
@@ -127,7 +152,7 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       );
     }
 
-    filter("*").through(JavaScriptCallbackServletFilter.class);
+    filter("*").through(JsonpServletFilter.class);
 
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);

@@ -34,8 +34,7 @@ public class CustomGuiceContainer extends GuiceContainer
 
   // OVERRIDES/IMPLEMENTS
   @Override
-  protected ResourceConfig getDefaultResourceConfig(final Map<String, Object> properties,
-      final WebConfig webConfig)
+  protected ResourceConfig getDefaultResourceConfig(final Map<String, Object> properties, final WebConfig webConfig)
     throws ServletException
   {
     final ResourceConfig resourceConfig=super.getDefaultResourceConfig(properties, webConfig);
