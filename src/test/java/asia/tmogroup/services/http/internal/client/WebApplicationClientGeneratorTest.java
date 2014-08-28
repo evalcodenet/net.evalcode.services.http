@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URL;
 import net.evalcode.services.http.internal.client.WebApplicationClientGenerator;
+import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 import net.evalcode.services.http.internal.client.resource.FooResource;
 import org.junit.Test;
 
