@@ -12,6 +12,8 @@ import org.mockito.Mockito;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
+import static org.junit.Assert.*;
+
 
 /**
  * Test {@link SecurityManagerInterceptor}
@@ -42,7 +44,7 @@ public class SecurityManagerInterceptorTest
     final SecurityManagerInterceptor securityManagerInterceptor=
       new SecurityManagerInterceptor(provider);
 
-    securityManagerInterceptor.invoke(methodInvocation);
+    assertNull(securityManagerInterceptor.invoke(methodInvocation));
   }
 
 
