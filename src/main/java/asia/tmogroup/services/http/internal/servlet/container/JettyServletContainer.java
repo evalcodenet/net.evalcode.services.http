@@ -274,7 +274,7 @@ public class JettyServletContainer implements ServletContainer
 
     int servletContextHandlerFlags=0;
 
-    // TODO JAAS without sessions.
+    // TODO JAAS without sessions?
     if(null!=servletContextRealm)
       servletContextHandlerFlags=ServletContextHandler.SESSIONS|ServletContextHandler.SECURITY;
     else if(!servletModule.isStateless())
@@ -293,10 +293,10 @@ public class JettyServletContainer implements ServletContainer
       constraintSecurityHandler.setLoginService(jaasLoginService);
       constraintSecurityHandler.setAuthMethod(servletModule.getSecurityAuthMethod());
 
-      final Map<String, String> authTypeProperties=servletModule.getSecurityInitParameters();
+      final Map<String, String> securityInitParameters=servletModule.getSecurityInitParameters();
 
-      for(final String key : authTypeProperties.keySet())
-        constraintSecurityHandler.setInitParameter(key, authTypeProperties.get(key));
+      for(final String key : securityInitParameters.keySet())
+        constraintSecurityHandler.setInitParameter(key, securityInitParameters.get(key));
 
       servletContextHandler.setSecurityHandler(constraintSecurityHandler);
     }

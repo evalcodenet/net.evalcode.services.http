@@ -2,8 +2,9 @@ package net.evalcode.services.http.service;
 
 
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -76,21 +77,22 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
 
   public String getSecurityAuthMethod()
   {
-    return "FORM";
+    return "BASIC";
   }
 
   public Map<String, String> getSecurityInitParameters()
   {
-    final Map<String, String> parameters=new HashMap<>();
-    parameters.put("form-login-page", "/login");
-    parameters.put("form-error-page", "/error");
+    return Collections.emptyMap();
+  }
 
-    return parameters;
+  public Set<String> getSecurityRoles()
+  {
+    return Collections.emptySet();
   }
 
   public boolean isStateless()
   {
-    return true;
+    return false;
   }
 
 

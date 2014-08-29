@@ -43,6 +43,7 @@ public class SecurityManagerInterceptor implements MethodInterceptor
     {
       final HttpServletRequest httpServletRequest=provider.get().getInstance(HttpServletRequest.class);
 
+      // TODO Bind HttpServiceServletModule#getSecurityRoles in HttpServiceServletModule and resolve here.
       @SuppressWarnings("unchecked")
       final Set<String> roles=(Set<String>)httpServletRequest.getSession().getAttribute("roles");
 
