@@ -1,18 +1,18 @@
 package net.evalcode.services.http.internal.servlet.ioc;
 
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.WebApplicationException;
-import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.mockito.Mockito;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
-
-import static org.junit.Assert.*;
 
 
 /**
@@ -23,28 +23,38 @@ import static org.junit.Assert.*;
 public class SecurityManagerInterceptorTest
 {
   // TESTS
-  @Test(expected=WebApplicationException.class)
+  @Test
   public void testMethodInvocation() throws Throwable
   {
     @SuppressWarnings("unchecked")
     final Provider<Injector> provider=Mockito.mock(Provider.class);
     final Injector injector=Mockito.mock(Injector.class);
     final HttpServletRequest httpServletRequest=Mockito.mock(HttpServletRequest.class);
+    final HttpServletResponse httpServletResponse=Mockito.mock(HttpServletResponse.class);
     final HttpSession httpSession=Mockito.mock(HttpSession.class);
 
     Mockito.when(provider.get()).thenReturn(injector);
     Mockito.when(injector.getInstance(HttpServletRequest.class)).thenReturn(httpServletRequest);
+    Mockito.when(injector.getInstance(HttpServletResponse.class)).thenReturn(httpServletResponse);
     Mockito.when(httpServletRequest.getSession()).thenReturn(httpSession);
+
+    final SecurityManagerInterceptor securityManagerInterceptor=
+        new SecurityManagerInterceptor(provider);
 
     final MethodInvocation methodInvocation=Mockito.mock(MethodInvocation.class);
 
-    Mockito.when(methodInvocation.getMethod())
-      .thenReturn(Foo.class.getMethod("bar", new Class<?> [] {}));
+    Mockito.when(methodInvocation.proceed())
+      .thenReturn(Boolean.TRUE);
 
-    final SecurityManagerInterceptor securityManagerInterceptor=
-      new SecurityManagerInterceptor(provider);
+    Mockito.when(methodInvocation.getMethod())
+      .thenReturn(Foo.class.getMethod("deny", new Class<?> [] {}));
 
     assertNull(securityManagerInterceptor.invoke(methodInvocation));
+
+    Mockito.when(methodInvocation.getMethod())
+      .thenReturn(Foo.class.getMethod("permit", new Class<?> [] {}));
+
+    assertSame(Boolean.TRUE, securityManagerInterceptor.invoke(methodInvocation));
   }
 
 
@@ -57,7 +67,13 @@ public class SecurityManagerInterceptorTest
   {
     // ACCESSORS/MUTATORS
     @DenyAll
-    public void bar()
+    public void deny()
+    {
+
+    }
+
+    @PermitAll
+    public void permit()
     {
 
     }
