@@ -10,6 +10,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import net.evalcode.services.http.annotation.Roles;
 import net.evalcode.services.http.annotation.Transactional;
 import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
@@ -20,6 +21,8 @@ import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerIntercepto
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
+import net.evalcode.services.http.service.servlet.ErrorServlet;
+import net.evalcode.services.http.service.servlet.LoginServlet;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
@@ -34,6 +37,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Stage;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.ServletScopes;
@@ -154,7 +158,14 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       );
     }
 
+    bind(new TypeLiteral<Set<String>>() {})
+      .annotatedWith(Roles.class)
+      .toInstance(getSecurityRoles());
+
     filter("*").through(JsonpServletFilter.class);
+
+    serve("/login").with(LoginServlet.class);
+    serve("/error").with(ErrorServlet.class);
 
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);
