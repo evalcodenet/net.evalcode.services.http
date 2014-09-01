@@ -44,28 +44,29 @@ public class LoginServlet extends HttpServlet
     throws ServletException, IOException
   {
     httpServletResponse.getWriter().println(
-      "<!doctype html>"
-      +"<html>"
-      +"<head>"
-      +"<title>Login</title>"
-      +"</head>"
-      +"<body>"
-      +"<h1>Login</h1>"
-      +"<form method=\"POST\">"
-      +"<label for=\"username\">Username</label>"
-      +"<input type=\"text\" name=\"username\" id=\"username\"/>"
-      +"<label for=\"password\">Password</label>"
-      +"<input type=\"password\" name=\"password\" id=\"password\"/>"
-      +"<button type=\"submit\">Submit</button>"
-      +"</form>"
-      +"</body>"
-      +"</html>"
+      "<!doctype html>"+
+      "<html>"+
+      "<head>"+
+      "<title>Login</title>"+
+      "</head>"+
+      "<body>"+
+      "<h1>Login</h1>"+
+      "<form method=\"POST\">"+
+      "<label for=\"username\">Username</label>"+
+      "<input type=\"text\" name=\"username\" id=\"username\"/>"+
+      "<label for=\"password\">Password</label>"+
+      "<input type=\"password\" name=\"password\" id=\"password\"/>"+
+      "<button type=\"submit\">Submit</button>"+
+      "</form>"+
+      "</body>"+
+      "</html>"
     );
   }
 
   @Override
   @PermitAll
-  protected void doPost(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse)
+  protected void doPost(final HttpServletRequest httpServletRequest,
+      final HttpServletResponse httpServletResponse)
     throws ServletException, IOException
   {
     final String username=httpServletRequest.getParameter("username");

@@ -12,7 +12,7 @@ import net.evalcode.services.http.annotation.client.WebApplicationClientType;
 public class PhpClientMethodParameter
 {
   // PREDEFINED PROPERTIES
-  static final char[] mapToCamelCase=new char[] {
+  static final char[] MAP_TO_CAMELCASE=new char[] {
     '-',
     '_'
   };
@@ -30,7 +30,8 @@ public class PhpClientMethodParameter
 
   // CONSTRUCTION
   public PhpClientMethodParameter(final String name, final  Class<?> type,
-    final String typeHint, final String typeDoc, final String defaultValue, final boolean assignMember)
+    final String typeHint, final String typeDoc, final String defaultValue,
+    final boolean assignMember)
   {
     this(name, type, typeHint, typeDoc, defaultValue, assignMember, false);
   }
@@ -73,7 +74,7 @@ public class PhpClientMethodParameter
         continue;
       }
 
-      for(final char map : mapToCamelCase)
+      for(final char map : MAP_TO_CAMELCASE)
       {
         if(c==map)
         {
@@ -94,7 +95,8 @@ public class PhpClientMethodParameter
 
   public String getType()
   {
-    String clazzName=type.getSimpleName();
+    final String clazzName=type.getSimpleName();
+
     if(null!=type.getAnnotation(WebApplicationClientType.class))
       return type.getAnnotation(WebApplicationClientType.class).value();
 

@@ -294,15 +294,15 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
     resource.addEntityClass(enumeration);
 
     final XmlEnum xmlEnum=clazz.getAnnotation(XmlEnum.class);
-    final boolean numeric=AtomicInteger.class.equals(xmlEnum.value())
-      || AtomicLong.class.equals(xmlEnum.value())
-      || BigDecimal.class.equals(xmlEnum.value())
-      || BigInteger.class.equals(xmlEnum.value())
-      || Double.class.equals(xmlEnum.value())
-      || Float.class.equals(xmlEnum.value())
-      || Integer.class.equals(xmlEnum.value())
-      || Long.class.equals(xmlEnum.value())
-      || Short.class.equals(xmlEnum.value());
+    final boolean numeric=AtomicInteger.class.equals(xmlEnum.value()) ||
+      AtomicLong.class.equals(xmlEnum.value()) ||
+      BigDecimal.class.equals(xmlEnum.value()) ||
+      BigInteger.class.equals(xmlEnum.value()) ||
+      Double.class.equals(xmlEnum.value()) ||
+      Float.class.equals(xmlEnum.value()) ||
+      Integer.class.equals(xmlEnum.value()) ||
+      Long.class.equals(xmlEnum.value()) ||
+      Short.class.equals(xmlEnum.value());
 
     for(final Field field : clazz.getDeclaredFields())
     {
@@ -381,7 +381,8 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
           addEntityType(application, resource, field.getType());
       }
 
-      if(ClassUtils.getAllInterfaces(field.getType()).contains(Iterable.class) || field.getType().isArray())
+      if(ClassUtils.getAllInterfaces(field.getType()).contains(Iterable.class)
+        || field.getType().isArray())
       {
         final Type genericType=field.getGenericType();
 

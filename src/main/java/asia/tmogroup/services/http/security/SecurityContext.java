@@ -37,7 +37,8 @@ public final class SecurityContext
 
   // ACCESSORS
   // TODO Verify whether we need synchronization here.
-  public void login(final HttpServletRequest httpServletRequest, final String username, final String password)
+  public void login(final HttpServletRequest httpServletRequest,
+      final String username, final String password)
     throws ServletException
   {
     name.set(null);

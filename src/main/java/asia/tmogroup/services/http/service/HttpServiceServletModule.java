@@ -164,9 +164,14 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .annotatedWith(Roles.class)
       .toInstance(getSecurityRoles());
 
-    // TODO javax.ws.rs.core.SecurityContext & token-based/oauth/other stateless authentication mechanism.
-    bind(SecurityContext.class)
-      .in(isStateless()?ServletScopes.REQUEST:ServletScopes.SESSION);
+    /**
+     * TODO Adopt javax.ws.rs.core.SecurityContext & token-based/oauth/other
+     * stateless authentication mechanism.
+     */
+    if(isStateless())
+      bind(SecurityContext.class).in(ServletScopes.REQUEST);
+    else
+      bind(SecurityContext.class).in(ServletScopes.SESSION);
 
     serve("/login").with(LoginServlet.class);
     serve("/error").with(ErrorServlet.class);

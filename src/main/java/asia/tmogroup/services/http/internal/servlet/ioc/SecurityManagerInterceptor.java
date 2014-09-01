@@ -53,7 +53,7 @@ public class SecurityManagerInterceptor implements MethodInterceptor
     }
 
     provider.get().getInstance(HttpServletResponse.class)
-      .sendError(403);
+      .sendError(HttpServletResponse.SC_FORBIDDEN);
 
     return null;
   }
