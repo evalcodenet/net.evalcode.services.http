@@ -51,8 +51,8 @@ public class JsonpServletFilter implements Filter
 {
   // OVERRIDES/IMPLEMENTS
   @Override
-  public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse,
-      final FilterChain filterChain)
+  public void doFilter(final ServletRequest servletRequest,
+      final ServletResponse servletResponse, final FilterChain filterChain)
     throws IOException, ServletException
   {
     String callback=StringUtils.substringAfterLast(

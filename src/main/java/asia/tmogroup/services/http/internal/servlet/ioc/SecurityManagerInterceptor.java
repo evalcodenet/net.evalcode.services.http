@@ -1,13 +1,12 @@
 package net.evalcode.services.http.internal.servlet.ioc;
 
 
-import java.util.Set;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import net.evalcode.services.http.security.SecurityContext;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
@@ -41,23 +40,20 @@ public class SecurityManagerInterceptor implements MethodInterceptor
 
     if(null!=rolesAllowed)
     {
-      final HttpServletRequest httpServletRequest=provider.get().getInstance(HttpServletRequest.class);
+      final SecurityContext securityContext=provider.get().getInstance(SecurityContext.class);
 
-      @SuppressWarnings("unchecked")
-      final Set<String> roles=(Set<String>)httpServletRequest.getSession().getAttribute("roles");
-
-      if(null!=roles)
+      if(securityContext.isLoggedIn())
       {
         for(final String role : rolesAllowed.value())
         {
-          if(roles.contains(role))
+          if(securityContext.isUserInRole(role))
             return methodInvocation.proceed();
         }
       }
     }
 
     provider.get().getInstance(HttpServletResponse.class)
-      .sendError(403, "HTTP/1.1 403 Forbidden");
+      .sendError(403);
 
     return null;
   }

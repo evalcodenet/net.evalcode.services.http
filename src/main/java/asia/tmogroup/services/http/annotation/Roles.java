@@ -15,9 +15,9 @@ import com.google.inject.BindingAnnotation;
  * @author carsten.schipke@gmail.com
  */
 @Documented
-@Target({ElementType.FIELD, ElementType.PARAMETER})
-@Retention(RetentionPolicy.RUNTIME)
 @BindingAnnotation
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 public @interface Roles
 {
 

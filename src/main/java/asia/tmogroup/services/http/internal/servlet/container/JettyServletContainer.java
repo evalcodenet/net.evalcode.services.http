@@ -274,11 +274,10 @@ public class JettyServletContainer implements ServletContainer
 
     int servletContextHandlerFlags=0;
 
-    // TODO JAAS without sessions?
+    if(!servletModule.isStateless())
+      servletContextHandlerFlags|=ServletContextHandler.SESSIONS;
     if(null!=servletContextRealm)
-      servletContextHandlerFlags=ServletContextHandler.SESSIONS|ServletContextHandler.SECURITY;
-    else if(!servletModule.isStateless())
-      servletContextHandlerFlags=ServletContextHandler.SESSIONS;
+      servletContextHandlerFlags|=ServletContextHandler.SECURITY;
 
     final ServletContextHandler servletContextHandler=new ServletContextHandler(
       contextHandlerContainer, servletModule.getContextPath(), servletContextHandlerFlags

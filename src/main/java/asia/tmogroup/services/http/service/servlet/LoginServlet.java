@@ -2,73 +2,78 @@ package net.evalcode.services.http.service.servlet;
 
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import net.evalcode.services.http.annotation.Roles;
+import net.evalcode.services.http.security.SecurityContext;
 
 
+/**
+ * LoginServlet
+ *
+ * @author evalcode.net
+ */
 @Singleton
 public class LoginServlet extends HttpServlet
 {
   // PREDEFINED PROPERTIES
   private static final long serialVersionUID=1L;
 
-  private static final Logger LOG=LoggerFactory.getLogger(LoginServlet.class);
-
 
   // MEMBERS
-  final Set<String> roles;
+  final Provider<SecurityContext> securityContext;
 
 
   // CONSTRUCTION
   @Inject
-  public LoginServlet(@Roles final Set<String> roles)
+  public LoginServlet(final Provider<SecurityContext> securityContext)
   {
-    this.roles=roles;
+    this.securityContext=securityContext;
   }
 
 
-  // OVERRIDES/IMPLEMENTS
+  // IMPLEMENTATION
   @Override
   @PermitAll
-  protected void doGet(final HttpServletRequest httpServletRequest,
-      final HttpServletResponse httpServletResponse) throws IOException
+  protected void doGet(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse)
+    throws ServletException, IOException
   {
-    final Set<String> userRoles=new HashSet<>();
+    httpServletResponse.getWriter().println(
+      "<!doctype html>"
+      +"<html>"
+      +"<head>"
+      +"<title>Login</title>"
+      +"</head>"
+      +"<body>"
+      +"<h1>Login</h1>"
+      +"<form method=\"POST\">"
+      +"<label for=\"username\">Username</label>"
+      +"<input type=\"text\" name=\"username\" id=\"username\"/>"
+      +"<label for=\"password\">Password</label>"
+      +"<input type=\"password\" name=\"password\" id=\"password\"/>"
+      +"<button type=\"submit\">Submit</button>"
+      +"</form>"
+      +"</body>"
+      +"</html>"
+    );
+  }
 
-    try
-    {
-      httpServletRequest.login(
-        httpServletRequest.getParameter("u"),
-        httpServletRequest.getParameter("p")
-      );
+  @Override
+  @PermitAll
+  protected void doPost(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse)
+    throws ServletException, IOException
+  {
+    final String username=httpServletRequest.getParameter("username");
+    final String password=httpServletRequest.getParameter("password");
 
-      for(final String role : roles)
-      {
-        if(httpServletRequest.isUserInRole(role))
-          userRoles.add(role);
-      }
+    if(null!=username && null!=password)
+      securityContext.get().login(httpServletRequest, username, password);
 
-      httpServletRequest.getSession().setAttribute("roles", userRoles);
-    }
-    catch(final ServletException e)
-    {
-      LOG.error(e.getMessage(), e);
-    }
-
-    LOG.info("Principal: {}", httpServletRequest.getUserPrincipal());
-    LOG.info("Session Id: {}", httpServletRequest.getSession().getId());
-    LOG.info("Roles: {}", userRoles);
-
-    httpServletResponse.getOutputStream().println(userRoles.toString());
+    httpServletResponse.getOutputStream().println(securityContext.get().getUserRoles().toString());
   }
 }

@@ -14,8 +14,8 @@ import java.lang.annotation.Target;
  * @author carsten.schipke@gmail.com
  */
 @Documented
-@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD})
 public @interface Transactional
 {
 

@@ -17,9 +17,11 @@ import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
 import net.evalcode.services.http.internal.servlet.container.CustomGuiceContainer;
 import net.evalcode.services.http.internal.servlet.exception.NotFoundExceptionMapper;
 import net.evalcode.services.http.internal.servlet.filter.JsonpServletFilter;
+import net.evalcode.services.http.internal.servlet.filter.LoginServletFilter;
 import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
+import net.evalcode.services.http.security.SecurityContext;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
 import net.evalcode.services.http.service.servlet.ErrorServlet;
 import net.evalcode.services.http.service.servlet.LoginServlet;
@@ -96,7 +98,7 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
 
   public boolean isStateless()
   {
-    return false;
+    return true;
   }
 
 
@@ -162,13 +164,18 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .annotatedWith(Roles.class)
       .toInstance(getSecurityRoles());
 
-    filter("*").through(JsonpServletFilter.class);
+    // TODO javax.ws.rs.core.SecurityContext & token-based/oauth/other stateless authentication mechanism.
+    bind(SecurityContext.class)
+      .in(isStateless()?ServletScopes.REQUEST:ServletScopes.SESSION);
 
     serve("/login").with(LoginServlet.class);
     serve("/error").with(ErrorServlet.class);
 
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);
+
+    filter("/"+APPLICATION_PATH_REST+"/*").through(LoginServletFilter.class);
+    filter("/"+APPLICATION_PATH_REST+"/*").through(JsonpServletFilter.class);
 
     serve("/"+APPLICATION_PATH_REST+"/*").with(CustomGuiceContainer.class);
   }
