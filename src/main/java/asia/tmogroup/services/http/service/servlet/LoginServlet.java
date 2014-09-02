@@ -10,7 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.evalcode.services.http.security.SecurityContext;
+import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
 
 
 /**
@@ -26,12 +26,12 @@ public class LoginServlet extends HttpServlet
 
 
   // MEMBERS
-  final Provider<SecurityContext> securityContext;
+  final Provider<ServletSecurityContext> securityContext;
 
 
   // CONSTRUCTION
   @Inject
-  public LoginServlet(final Provider<SecurityContext> securityContext)
+  public LoginServlet(final Provider<ServletSecurityContext> securityContext)
   {
     this.securityContext=securityContext;
   }

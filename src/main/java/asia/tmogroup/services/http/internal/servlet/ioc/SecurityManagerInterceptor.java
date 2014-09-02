@@ -3,10 +3,12 @@ package net.evalcode.services.http.internal.servlet.ioc;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import net.evalcode.services.http.security.SecurityContext;
+import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
@@ -16,13 +18,15 @@ import com.google.inject.Provider;
  *
  * @author carsten.schipke@gmail.com
  */
+@Singleton
 public class SecurityManagerInterceptor implements MethodInterceptor
 {
   // MEMBERS
-  private final Provider<Injector> provider;
+  final Provider<Injector> provider;
 
 
   // CONSTRUCTION
+  @Inject
   public SecurityManagerInterceptor(final Provider<Injector> provider)
   {
     this.provider=provider;
@@ -40,7 +44,9 @@ public class SecurityManagerInterceptor implements MethodInterceptor
 
     if(null!=rolesAllowed)
     {
-      final SecurityContext securityContext=provider.get().getInstance(SecurityContext.class);
+      final ServletSecurityContext securityContext=provider.get().getInstance(
+        ServletSecurityContext.class
+      );
 
       if(securityContext.isLoggedIn())
       {

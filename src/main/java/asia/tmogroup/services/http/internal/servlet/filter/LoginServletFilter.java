@@ -12,7 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import net.evalcode.services.http.security.SecurityContext;
+import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
 
 
 /**
@@ -24,12 +24,12 @@ import net.evalcode.services.http.security.SecurityContext;
 public class LoginServletFilter implements Filter
 {
   // MEMBERS
-  final Provider<SecurityContext> securityContext;
+  final Provider<ServletSecurityContext> securityContext;
 
 
   // CONSTRUCTION
   @Inject
-  public LoginServletFilter(final Provider<SecurityContext> securityContext)
+  public LoginServletFilter(final Provider<ServletSecurityContext> securityContext)
   {
     this.securityContext=securityContext;
   }
@@ -41,8 +41,10 @@ public class LoginServletFilter implements Filter
       final ServletResponse servletResponse, final FilterChain filterChain)
     throws IOException, ServletException
   {
-    final String username=((HttpServletRequest)servletRequest).getHeader("Username");
-    final String password=((HttpServletRequest)servletRequest).getHeader("Password");
+    final HttpServletRequest httpServletRequest=(HttpServletRequest)servletRequest;
+
+    final String username=httpServletRequest.getHeader("Username");
+    final String password=httpServletRequest.getHeader("Password");
 
     if(null!=username && null!=password)
       securityContext.get().login((HttpServletRequest)servletRequest, username, password);

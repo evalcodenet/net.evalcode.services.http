@@ -1,11 +1,13 @@
 package net.evalcode.services.http.internal.servlet.ioc;
 
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import net.evalcode.services.http.annotation.Transactional;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import net.evalcode.services.http.annotation.Transactional;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
@@ -15,6 +17,7 @@ import com.google.inject.Provider;
  *
  * @author carsten.schipke@gmail.com
  */
+@Singleton
 public class TransactionManagerInterceptor implements MethodInterceptor
 {
   // MEMBERS
@@ -22,6 +25,7 @@ public class TransactionManagerInterceptor implements MethodInterceptor
 
 
   // CONSTRUCTION
+  @Inject
   public TransactionManagerInterceptor(final Provider<Injector> provider)
   {
     this.provider=provider;

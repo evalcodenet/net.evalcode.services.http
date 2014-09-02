@@ -10,15 +10,15 @@ import com.google.inject.BindingAnnotation;
 
 
 /**
- * Roles
+ * JaasRoles
  *
- * @author carsten.schipke@gmail.com
+ * @author evalcode.net
  */
 @Documented
 @BindingAnnotation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
-public @interface Roles
+public @interface JaasRoles
 {
 
 }

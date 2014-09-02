@@ -10,7 +10,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import net.evalcode.services.http.annotation.Roles;
+import net.evalcode.services.http.annotation.JaasRoles;
 import net.evalcode.services.http.annotation.Transactional;
 import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
@@ -20,10 +20,9 @@ import net.evalcode.services.http.internal.servlet.filter.JsonpServletFilter;
 import net.evalcode.services.http.internal.servlet.filter.LoginServletFilter;
 import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
+import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
-import net.evalcode.services.http.security.SecurityContext;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
-import net.evalcode.services.http.service.servlet.ErrorServlet;
 import net.evalcode.services.http.service.servlet.LoginServlet;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
@@ -76,19 +75,11 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     return null;
   }
 
+  // TODO Token-based/oauth/other stateless authentication mechanism.
+  // TODO Authentication methods BASIC/DIGEST, FORM and respective init parameters etc.
   public String getSecurityRealm()
   {
     return null;
-  }
-
-  public String getSecurityAuthMethod()
-  {
-    return "BASIC";
-  }
-
-  public Map<String, String> getSecurityInitParameters()
-  {
-    return Collections.emptyMap();
   }
 
   public Set<String> getSecurityRoles()
@@ -161,20 +152,13 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     }
 
     bind(new TypeLiteral<Set<String>>() {})
-      .annotatedWith(Roles.class)
+      .annotatedWith(JaasRoles.class)
       .toInstance(getSecurityRoles());
 
-    /**
-     * TODO Adopt javax.ws.rs.core.SecurityContext & token-based/oauth/other
-     * stateless authentication mechanism.
-     */
-    if(isStateless())
-      bind(SecurityContext.class).in(ServletScopes.REQUEST);
-    else
-      bind(SecurityContext.class).in(ServletScopes.SESSION);
+    bind(ServletSecurityContext.class)
+      .in(isStateless()?ServletScopes.REQUEST:ServletScopes.SESSION);
 
     serve("/login").with(LoginServlet.class);
-    serve("/error").with(ErrorServlet.class);
 
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);
