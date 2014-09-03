@@ -58,7 +58,7 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
 
   // MEMBERS
   @Inject
-  Injector injector;
+  protected Injector injector;
 
 
   // ACCESSORS/MUTATAORS
