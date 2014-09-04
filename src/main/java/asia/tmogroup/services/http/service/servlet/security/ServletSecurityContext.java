@@ -1,4 +1,4 @@
-package net.evalcode.services.http.internal.servlet.security;
+package net.evalcode.services.http.service.servlet.security;
 
 
 import java.security.Principal;
@@ -21,7 +21,7 @@ import net.evalcode.services.http.annotation.JaasRoles;
  */
 @Singleton
 // TODO Reduce locking.
-public final class ServletSecurityContext implements SecurityContext
+public class ServletSecurityContext implements SecurityContext
 {
   // MEMBERS
   final Set<String> jaasRoles;
@@ -34,7 +34,7 @@ public final class ServletSecurityContext implements SecurityContext
   // CONSTRUCTION
   @Inject
   public ServletSecurityContext(final Provider<HttpServletRequest> httpServletRequest,
-    @JaasRoles final Set<String> jaasRoles)
+      @JaasRoles final Set<String> jaasRoles)
   {
     this.httpServletRequest=httpServletRequest;
     this.jaasRoles=jaasRoles;

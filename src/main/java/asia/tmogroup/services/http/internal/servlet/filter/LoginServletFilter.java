@@ -12,7 +12,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
+import javax.servlet.http.HttpServletResponse;
+import net.evalcode.services.http.service.servlet.security.ServletSecurityContext;
 
 
 /**
@@ -42,12 +43,17 @@ public class LoginServletFilter implements Filter
     throws IOException, ServletException
   {
     final HttpServletRequest httpServletRequest=(HttpServletRequest)servletRequest;
+    final HttpServletResponse httpServletResponse=(HttpServletResponse)servletResponse;
 
-    final String username=httpServletRequest.getHeader("Username");
-    final String password=httpServletRequest.getHeader("Password");
+    final String username=httpServletRequest.getHeader("Services-Username");
+    final String password=httpServletRequest.getHeader("Services-Password");
 
     if(null!=username && null!=password)
       securityContext.get().login((HttpServletRequest)servletRequest, username, password);
+
+    httpServletResponse.setHeader("Services-Authenticated",
+      String.valueOf(securityContext.get().isLoggedIn())
+    );
 
     filterChain.doFilter(servletRequest, servletResponse);
   }

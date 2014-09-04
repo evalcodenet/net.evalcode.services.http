@@ -8,7 +8,7 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
+import net.evalcode.services.http.service.servlet.security.ServletSecurityContext;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 

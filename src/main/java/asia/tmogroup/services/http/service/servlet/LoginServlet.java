@@ -10,7 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.evalcode.services.http.internal.servlet.security.ServletSecurityContext;
+import net.evalcode.services.http.service.servlet.security.ServletSecurityContext;
 
 
 /**
@@ -52,10 +52,10 @@ public class LoginServlet extends HttpServlet
       "<body>"+
       "<h1>Login</h1>"+
       "<form method=\"POST\">"+
-      "<label for=\"username\">Username</label>"+
-      "<input type=\"text\" name=\"username\" id=\"username\"/>"+
-      "<label for=\"password\">Password</label>"+
-      "<input type=\"password\" name=\"password\" id=\"password\"/>"+
+      "<label for=\"services-username\">Username</label>"+
+      "<input type=\"text\" name=\"services_username\" id=\"services-username\"/>"+
+      "<label for=\"services-password\">Password</label>"+
+      "<input type=\"password\" name=\"services_password\" id=\"services-password\"/>"+
       "<button type=\"submit\">Submit</button>"+
       "</form>"+
       "</body>"+
@@ -69,8 +69,8 @@ public class LoginServlet extends HttpServlet
       final HttpServletResponse httpServletResponse)
     throws ServletException, IOException
   {
-    final String username=httpServletRequest.getParameter("username");
-    final String password=httpServletRequest.getParameter("password");
+    final String username=httpServletRequest.getParameter("services_username");
+    final String password=httpServletRequest.getParameter("services_password");
 
     if(null!=username && null!=password)
       securityContext.get().login(httpServletRequest, username, password);
