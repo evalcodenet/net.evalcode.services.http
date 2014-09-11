@@ -8,7 +8,7 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import net.evalcode.services.http.service.servlet.security.ServletSecurityContext;
+import net.evalcode.services.http.service.security.JaasSecurityContext;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
@@ -44,8 +44,8 @@ public class SecurityManagerInterceptor implements MethodInterceptor
 
     if(null!=rolesAllowed)
     {
-      final ServletSecurityContext securityContext=provider.get().getInstance(
-        ServletSecurityContext.class
+      final JaasSecurityContext securityContext=provider.get().getInstance(
+        JaasSecurityContext.class
       );
 
       if(securityContext.isLoggedIn())

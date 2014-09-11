@@ -17,5 +17,5 @@ Export-Package: net.evalcode.services.http,
  net.evalcode.services.http.service,
  net.evalcode.services.http.service.console,
  net.evalcode.services.http.service.jmx,
- net.evalcode.services.http.service.servlet.security,
+ net.evalcode.services.http.service.security,
  net.evalcode.services.http.util.xml

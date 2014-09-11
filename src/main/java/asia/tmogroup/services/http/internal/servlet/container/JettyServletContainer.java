@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import net.evalcode.services.http.internal.servlet.ServletContainer;
 import net.evalcode.services.http.service.HttpService;
 import net.evalcode.services.http.service.HttpServiceServletModule;
+import net.evalcode.services.http.service.security.JaasIdentityService;
 import net.evalcode.services.http.service.xml.HttpConfiguration;
 import net.evalcode.services.http.service.xml.HttpConfiguration.Listener;
 import com.google.inject.Guice;
@@ -284,6 +285,7 @@ public class JettyServletContainer implements ServletContainer
     {
       final JAASLoginService jaasLoginService=new JAASLoginService(servletContextRealm);
       jaasLoginService.setLoginModuleName(servletContextRealm);
+      jaasLoginService.setIdentityService(new JaasIdentityService());
 
       final ConstraintSecurityHandler constraintSecurityHandler=new ConstraintSecurityHandler();
       constraintSecurityHandler.setLoginService(jaasLoginService);

@@ -2,30 +2,27 @@ package net.evalcode.services.http.service;
 
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import net.evalcode.services.http.annotation.JaasRoles;
 import net.evalcode.services.http.annotation.Transactional;
 import net.evalcode.services.http.internal.client.WebApplicationClientGeneratorPhp;
 import net.evalcode.services.http.internal.persistence.EntityManagerProvider;
 import net.evalcode.services.http.internal.servlet.container.CustomGuiceContainer;
 import net.evalcode.services.http.internal.servlet.exception.NotFoundExceptionMapper;
 import net.evalcode.services.http.internal.servlet.filter.JsonpServletFilter;
-import net.evalcode.services.http.internal.servlet.filter.LoginServletFilter;
 import net.evalcode.services.http.internal.servlet.ioc.SecurityManagerInterceptor;
 import net.evalcode.services.http.internal.servlet.ioc.TransactionManagerInterceptor;
 import net.evalcode.services.http.internal.xml.JaxbContextResolver;
 import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorResource;
-import net.evalcode.services.http.service.servlet.LoginServlet;
-import net.evalcode.services.http.service.servlet.security.ServletSecurityContext;
+import net.evalcode.services.http.service.security.JaasSecurityContext;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
+import net.evalcode.services.manager.service.cache.annotation.CacheInstance;
+import net.evalcode.services.manager.service.cache.ioc.CacheInstanceProvider;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
 import net.evalcode.services.manager.service.concurrent.annotation.Asynchronous;
 import net.evalcode.services.manager.service.concurrent.ioc.MethodInvocationExecutor;
@@ -38,7 +35,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Stage;
-import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.ServletScopes;
@@ -75,16 +71,10 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
     return null;
   }
 
-  // TODO Token-based/oauth/other stateless authentication mechanism.
   // TODO Authentication methods BASIC/DIGEST, FORM and respective init parameters etc.
   public String getSecurityRealm()
   {
     return null;
-  }
-
-  public Set<String> getSecurityRoles()
-  {
-    return Collections.emptySet();
   }
 
   public boolean isStateless()
@@ -121,11 +111,18 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .toProvider(EntityManagerProvider.class)
       .in(ServletScopes.REQUEST);
 
+    bind(JaasSecurityContext.class)
+      .in(ServletScopes.REQUEST);
+
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Asynchronous.class),
       new MethodInvocationExecutor());
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Cache.class),
       new MethodInvocationCache(getProvider(Injector.class))
+    );
+
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheInstance.class),
+      new CacheInstanceProvider(getProvider(Injector.class))
     );
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Count.class),
@@ -151,20 +148,14 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       );
     }
 
-    bind(new TypeLiteral<Set<String>>() {})
-      .annotatedWith(JaasRoles.class)
-      .toInstance(getSecurityRoles());
+    filter("/"+APPLICATION_PATH_REST+"/*").through(
+      JaasSecurityContext.AuthenticationFilter.class
+    );
 
-    bind(ServletSecurityContext.class)
-      .in(isStateless()?ServletScopes.REQUEST:ServletScopes.SESSION);
-
-    serve("/login").with(LoginServlet.class);
+    filter("/"+APPLICATION_PATH_REST+"/*").through(JsonpServletFilter.class);
 
     bind(WebApplicationClientGeneratorPhp.class);
     bind(WebApplicationClientGeneratorResource.class);
-
-    filter("/"+APPLICATION_PATH_REST+"/*").through(LoginServletFilter.class);
-    filter("/"+APPLICATION_PATH_REST+"/*").through(JsonpServletFilter.class);
 
     serve("/"+APPLICATION_PATH_REST+"/*").with(CustomGuiceContainer.class);
   }
