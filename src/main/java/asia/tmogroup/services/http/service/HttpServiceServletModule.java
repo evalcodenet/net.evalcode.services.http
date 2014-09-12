@@ -21,8 +21,6 @@ import net.evalcode.services.http.service.rest.WebApplicationClientGeneratorReso
 import net.evalcode.services.http.service.security.JaasSecurityContext;
 import net.evalcode.services.manager.component.ComponentBundleInterface;
 import net.evalcode.services.manager.service.cache.annotation.Cache;
-import net.evalcode.services.manager.service.cache.annotation.CacheInstance;
-import net.evalcode.services.manager.service.cache.ioc.CacheInstanceProvider;
 import net.evalcode.services.manager.service.cache.ioc.MethodInvocationCache;
 import net.evalcode.services.manager.service.concurrent.annotation.Asynchronous;
 import net.evalcode.services.manager.service.concurrent.ioc.MethodInvocationExecutor;
@@ -111,18 +109,11 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       .toProvider(EntityManagerProvider.class)
       .in(ServletScopes.REQUEST);
 
-    bind(JaasSecurityContext.class)
-      .in(ServletScopes.REQUEST);
-
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Asynchronous.class),
       new MethodInvocationExecutor());
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Cache.class),
       new MethodInvocationCache(getProvider(Injector.class))
-    );
-
-    bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheInstance.class),
-      new CacheInstanceProvider(getProvider(Injector.class))
     );
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Count.class),
@@ -133,13 +124,29 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
       new TransactionManagerInterceptor(getProvider(Injector.class))
     );
 
-    final Matcher securityAnnotationsMatcher=Matchers.annotatedWith(DenyAll.class)
-      .or(Matchers.annotatedWith(PermitAll.class))
-      .or(Matchers.annotatedWith(RolesAllowed.class));
+    if(null==getSecurityRealm())
+    {
+      bind(JaasSecurityContext.class)
+        .to(JaasSecurityContext.Disabled.class)
+        .in(ServletScopes.REQUEST);
+    }
+    else
+    {
+      bind(JaasSecurityContext.class)
+        .in(ServletScopes.REQUEST);
 
-    bindInterceptor(Matchers.any(), securityAnnotationsMatcher,
-      new SecurityManagerInterceptor(getProvider(Injector.class))
-    );
+      final Matcher securityAnnotationsMatcher=Matchers.annotatedWith(DenyAll.class)
+        .or(Matchers.annotatedWith(PermitAll.class))
+        .or(Matchers.annotatedWith(RolesAllowed.class));
+
+      bindInterceptor(Matchers.any(), securityAnnotationsMatcher,
+        new SecurityManagerInterceptor(getProvider(Injector.class))
+      );
+
+      filter("/"+APPLICATION_PATH_REST+"/*").through(
+        JaasSecurityContext.AuthenticationFilter.class
+      );
+    }
 
     if(Stage.DEVELOPMENT.equals(currentStage()))
     {
@@ -147,10 +154,6 @@ public abstract class HttpServiceServletModule extends JerseyServletModule
         new MethodInvocationLogger()
       );
     }
-
-    filter("/"+APPLICATION_PATH_REST+"/*").through(
-      JaasSecurityContext.AuthenticationFilter.class
-    );
 
     filter("/"+APPLICATION_PATH_REST+"/*").through(JsonpServletFilter.class);
 

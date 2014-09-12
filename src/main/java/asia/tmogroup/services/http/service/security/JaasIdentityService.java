@@ -3,11 +3,8 @@ package net.evalcode.services.http.service.security;
 
 import java.security.Principal;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import javax.security.auth.Subject;
-import org.eclipse.jetty.http.security.Password;
-import org.eclipse.jetty.plus.jaas.JAASRole;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.RoleRunAsToken;
@@ -34,26 +31,19 @@ public class JaasIdentityService implements IdentityService
   public UserIdentity newUserIdentity(final Subject subject,
       final Principal principal, final String[] roles)
   {
-    final Set<Password> credentials=subject.getPrivateCredentials(Password.class);
+    final Set<Principal> subjectPrincipals=subject.getPrincipals();
+    final Set<ServiceUserPrincipal> serviceUserPrincipals=
+      subject.getPrincipals(ServiceUserPrincipal.class);
 
-    String token=null;
-
-    if(1==credentials.size())
-      token=credentials.iterator().next().toString();
-
-    final ServiceUserPrincipal serviceUserPrincipal=new ServiceUserPrincipal(
-      principal.getName(), token, roles
-    );
-
-    final Set<Principal> principals=new HashSet<>();
-
-    for(final String role : roles)
-      principals.add(new JAASRole(role));
-
-    principals.add(serviceUserPrincipal);
+    final ServiceUserPrincipal serviceUserPrincipal=serviceUserPrincipals.iterator().next();
 
     return new DefaultUserIdentity(
-      new Subject(subject.isReadOnly(), principals, Collections.emptySet(), Collections.emptySet()),
+      new Subject(
+        subject.isReadOnly(),
+        subjectPrincipals,
+        Collections.emptySet(),
+        Collections.emptySet()
+      ),
       serviceUserPrincipal,
       roles
     );

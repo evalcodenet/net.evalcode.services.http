@@ -20,10 +20,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.SecurityContext;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.evalcode.services.manager.service.cache.annotation.CacheInstance;
-import net.evalcode.services.manager.service.cache.annotation.Region;
+import net.evalcode.services.manager.service.cache.impl.ehcache.EhcacheCache;
+import net.evalcode.services.manager.service.cache.impl.ehcache.EhcacheCacheManagerFactory;
 import net.evalcode.services.manager.service.cache.spi.Cache;
 import net.evalcode.services.manager.util.security.Hash;
 import com.google.common.collect.Sets;
@@ -37,8 +39,12 @@ import com.google.common.collect.Sets;
 public class JaasSecurityContext implements SecurityContext
 {
   // PREDEFINED PROPERTIES
+  public static final String INIT_PARAM_REALM="jaas-context-realm";
+
+  static final String CACHE_REGION="net.evalcode.services.http.security";
+
   static final Logger LOG=LoggerFactory.getLogger(JaasSecurityContext.class);
-  static final String STORAGE_REGION="net.evalcode.services.cache.http.security";
+  static final CacheManager CACHE_MANAGER=EhcacheCacheManagerFactory.get().getCacheManager();
 
 
   // MEMBERS
@@ -63,7 +69,9 @@ public class JaasSecurityContext implements SecurityContext
     final Principal userPrincipal=httpServletRequest.getUserPrincipal();
     final ServiceUserPrincipal serviceUserPrincipal=(ServiceUserPrincipal)userPrincipal;
 
-    getStorage().put(serviceUserPrincipal.getToken(), serviceUserPrincipal);
+    final String realm=httpServletRequest.getServletContext().getInitParameter(INIT_PARAM_REALM);
+
+    getStorage(CACHE_REGION+"."+realm).put(serviceUserPrincipal.getToken(), serviceUserPrincipal);
 
     return serviceUserPrincipal.getToken();
   }
@@ -111,23 +119,154 @@ public class JaasSecurityContext implements SecurityContext
 
 
   // IMPLEMENTATION
-  // TODO Define/share region by security realm.
-  @CacheInstance(region=@Region(STORAGE_REGION))
-  Cache<?> getStorage()
+  static Cache<?> getStorage(final String region)
   {
-    return null;
+    final Ehcache cache=CACHE_MANAGER.getEhcache(region);
+
+    if(null==cache)
+    {
+      throw new RuntimeException(
+        "Unable to access region in cache. "+
+        "Please verify configuration of net.evalcode.services.cache [region: "+region+"]."
+      );
+    }
+
+    return new EhcacheCache(cache);
   }
 
 
   /**
-   * ServiceUserInfo
+   * Disabled
    *
    * @author evalcode.net
    */
-  public interface ServiceUserInfo
+  public static class Disabled extends JaasSecurityContext
   {
-    // ACCESSORS/MUTATORS
-    ServiceUserPrincipal getPrincipal();
+    // CONSTRUCTION
+    @Inject
+    public Disabled(final Provider<HttpServletRequest> httpServletRequest)
+    {
+      super(httpServletRequest);
+    }
+
+
+    // OVERRIDES/IMPLEMENTS
+    public String login(final String principal, final String credential) throws ServletException
+    {
+      return null;
+    }
+
+    public void logout() throws ServletException
+    {
+      // Do nothing ...
+    }
+
+    @Override
+    public boolean isLoggedIn()
+    {
+      return false;
+    }
+
+    @Override
+    public Set<String> getUserRoles()
+    {
+      return Collections.emptySet();
+    }
+
+    @Override
+    public Principal getUserPrincipal()
+    {
+      return new ServiceUserPrincipal(ServiceUserPrincipal.ANONYMOUS);
+    }
+
+    @Override
+    public boolean isUserInRole(final String role)
+    {
+      return false;
+    }
+  }
+
+
+  /**
+   * AuthenticationFilter
+   *
+   * @author evalcode.net
+   */
+  @Singleton
+  public static class AuthenticationFilter implements Filter
+  {
+    // PREDEFINED PROPERTIES
+    public static final String HEADER_SERVICES_TOKEN="Services-Token";
+    public static final String HEADER_SERVICES_PRINCIPAL="Services-Principal";
+    public static final String HEADER_SERVICES_CREDENTIAL="Services-Credential";
+
+
+    // MEMBERS
+    final Provider<JaasSecurityContext> securityContext;
+
+
+    // CONSTRUCTION
+    @Inject
+    public AuthenticationFilter(final Provider<JaasSecurityContext> securityContext)
+    {
+      this.securityContext=securityContext;
+    }
+
+
+    // OVERRIDES/IMPLEMENTS
+    @Override
+    public void init(final FilterConfig filterConfig) throws ServletException
+    {
+      // Nothing to do ...
+
+    }
+
+    @Override
+    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse,
+        final FilterChain filterChain)
+      throws IOException, ServletException
+    {
+      final HttpServletRequest httpServletRequest=(HttpServletRequest)servletRequest;
+      final HttpServletResponse httpServletResponse=(HttpServletResponse)servletResponse;
+
+      try
+      {
+        final String token=httpServletRequest.getHeader(HEADER_SERVICES_TOKEN);
+
+        if(null==token)
+        {
+          final String principal=httpServletRequest.getHeader(HEADER_SERVICES_PRINCIPAL);
+          final String credential=httpServletRequest.getHeader(HEADER_SERVICES_CREDENTIAL);
+
+          if(null!=principal && null!=credential)
+          {
+            httpServletResponse.setHeader(HEADER_SERVICES_TOKEN,
+              securityContext.get().login(principal, credential)
+            );
+          }
+        }
+        else
+        {
+          httpServletResponse.setHeader(HEADER_SERVICES_TOKEN,
+            securityContext.get().login(token, null)
+          );
+        }
+      }
+      catch(final ServletException e)
+      {
+        httpServletResponse.sendError(403);
+
+        return;
+      }
+
+      filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    @Override
+    public void destroy()
+    {
+      // Nothing to do ...
+    }
   }
 
 
@@ -140,6 +279,7 @@ public class JaasSecurityContext implements SecurityContext
   {
     // PREDEFINED PROPERTIES
     static final long serialVersionUID=1L;
+    static final String ANONYMOUS="anonymous";
 
 
     // MEMBERS
@@ -206,78 +346,6 @@ public class JaasSecurityContext implements SecurityContext
       return String.format("%s{name: %s, roles: %s}",
         ServiceUserPrincipal.class.getSimpleName(), name, roles
       );
-    }
-  }
-
-
-  /**
-   * AuthenticationFilter
-   *
-   * @author evalcode.net
-   */
-  @Singleton
-  public static class AuthenticationFilter implements Filter
-  {
-    // PREDEFINED PROPERTIES
-    public static final String HEADER_SERVICES_TOKEN="Services-Token";
-    public static final String HEADER_SERVICES_PRINCIPAL="Services-Principal";
-    public static final String HEADER_SERVICES_CREDENTIAL="Services-Credential";
-
-
-    // MEMBERS
-    final Provider<JaasSecurityContext> securityContext;
-
-
-    // CONSTRUCTION
-    @Inject
-    public AuthenticationFilter(final Provider<JaasSecurityContext> securityContext)
-    {
-      this.securityContext=securityContext;
-    }
-
-
-    // OVERRIDES/IMPLEMENTS
-    @Override
-    public void init(final FilterConfig filterConfig) throws ServletException
-    {
-      // Nothing to do ...
-
-    }
-
-    @Override
-    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse,
-        final FilterChain filterChain)
-      throws IOException, ServletException
-    {
-      final HttpServletRequest httpServletRequest=(HttpServletRequest)servletRequest;
-      final HttpServletResponse httpServletResponse=(HttpServletResponse)servletResponse;
-
-      final String token=httpServletRequest.getHeader(HEADER_SERVICES_TOKEN);
-
-      if(null==token)
-      {
-        final String principal=httpServletRequest.getHeader(HEADER_SERVICES_PRINCIPAL);
-        final String credential=httpServletRequest.getHeader(HEADER_SERVICES_CREDENTIAL);
-
-        if(null!=principal && null!=credential)
-        {
-          httpServletResponse.setHeader(HEADER_SERVICES_TOKEN,
-            securityContext.get().login(principal, credential)
-          );
-        }
-      }
-      else
-      {
-        httpServletResponse.setHeader(HEADER_SERVICES_TOKEN,
-          securityContext.get().login(token, null)
-        );
-      }
-    }
-
-    @Override
-    public void destroy()
-    {
-      // Nothing to do ...
     }
   }
 }

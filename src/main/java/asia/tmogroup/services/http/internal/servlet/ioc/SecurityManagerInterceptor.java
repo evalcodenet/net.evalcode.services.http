@@ -5,10 +5,10 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import net.evalcode.services.http.service.security.JaasSecurityContext;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
@@ -44,17 +44,13 @@ public class SecurityManagerInterceptor implements MethodInterceptor
 
     if(null!=rolesAllowed)
     {
-      final JaasSecurityContext securityContext=provider.get().getInstance(
-        JaasSecurityContext.class
-      );
+      final HttpServletRequest httpServletRequest=provider.get()
+        .getInstance(HttpServletRequest.class);
 
-      if(securityContext.isLoggedIn())
+      for(final String role : rolesAllowed.value())
       {
-        for(final String role : rolesAllowed.value())
-        {
-          if(securityContext.isUserInRole(role))
-            return methodInvocation.proceed();
-        }
+        if(httpServletRequest.isUserInRole(role))
+          return methodInvocation.proceed();
       }
     }
 

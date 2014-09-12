@@ -1,13 +1,10 @@
 package net.evalcode.services.http.service.xml;
 
 
-import java.util.Set;
-import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import net.evalcode.services.manager.component.Environment;
 import net.evalcode.services.manager.component.annotation.Configuration;
 
 
@@ -22,14 +19,21 @@ import net.evalcode.services.manager.component.annotation.Configuration;
 public class HttpConfiguration
 {
   // FIELDS
-  @XmlElement(name="listen")
-  Set<Listener> listeners;
+  @XmlElement(name="http", required=false)
+  Listener http;
+  @XmlElement(name="https", required=false)
+  Listener https;
 
 
   // ACCESSORS/MUTATORS
-  public Set<Listener> get()
+  public Listener http()
   {
-    return listeners;
+    return http;
+  }
+
+  public Listener https()
+  {
+    return https;
   }
 
 
@@ -42,18 +46,6 @@ public class HttpConfiguration
   @XmlAccessorType(XmlAccessType.NONE)
   public static class Listener
   {
-    /**
-     * Scheme
-     *
-     * @author carsten.schipke@gmail.com
-     */
-    public static enum Scheme
-    {
-      HTTP,
-      HTTPS;
-    }
-
-
     // PREDEFINED PROPERTIES
     static final int DEFAULT_PORT=8080;
     static final String DEFAULT_HOST="localhost";
@@ -65,10 +57,6 @@ public class HttpConfiguration
 
 
     // BASIC SETTINGS
-    @XmlElement(name="enabled")
-    boolean enabled=true;
-    @XmlElement(name="scheme")
-    Scheme scheme=Scheme.HTTP;
     @XmlElement(name="host")
     String host=DEFAULT_HOST;
     @XmlElement(name="port")
@@ -97,22 +85,7 @@ public class HttpConfiguration
     String certificateAlias=DEFAULT_CERTIFICATE_ALIAS;
 
 
-    // MEMBERS
-    @Inject
-    private Environment environment;
-
-
     // ACCESSORS/MUTATORS
-    public boolean isEnabled()
-    {
-      return enabled;
-    }
-
-    public Scheme getScheme()
-    {
-      return scheme;
-    }
-
     public String getHost()
     {
       return host;
@@ -126,7 +99,7 @@ public class HttpConfiguration
     public int getAcceptors()
     {
       if(1>acceptors)
-        return Runtime.getRuntime().availableProcessors()+1;
+        return 2*Runtime.getRuntime().availableProcessors();
 
       return acceptors;
     }
@@ -181,37 +154,29 @@ public class HttpConfiguration
       stringBuilder.append(Listener.class.getSimpleName());
       stringBuilder.append("{");
 
-      stringBuilder.append(String.format("enabled: %1$s, ", String.valueOf(isEnabled())));
-      stringBuilder.append(String.format("scheme: %1$s, ", getScheme()));
-      stringBuilder.append(String.format("host: %1$s, ", getHost()));
+      stringBuilder.append(String.format("host: %s, ", getHost()));
       stringBuilder.append(String.format("port: %1$d, ", getPort()));
 
-      stringBuilder.append(String.format("acceptors: %1$s, ",
+      stringBuilder.append(String.format("acceptors: %s, ",
         String.valueOf(getAcceptors())
       ));
-      stringBuilder.append(String.format("enable_direct_buffers: %1$s, ",
+      stringBuilder.append(String.format("enable_direct_buffers: %s, ",
         String.valueOf(isDirectBuffersEnabled())
       ));
-      stringBuilder.append(String.format("enable_reverse_lookup: %1$s, ",
+      stringBuilder.append(String.format("enable_reverse_lookup: %s, ",
         String.valueOf(isReverseLookupEnabled())
       ));
-      stringBuilder.append(String.format("enable_statistics: %1$s, ",
+      stringBuilder.append(String.format("enable_statistics: %s, ",
         String.valueOf(isStatisticsEnabled())
       ));
 
-      stringBuilder.append(String.format("keystore: %1$s, ", getKeyStore()));
-      if(null!=environment && environment.isDevelopment())
-        stringBuilder.append(String.format("keystore_password: %1$s, ", getKeyStorePassword()));
-      else
-        stringBuilder.append("keystore_password: *****, ");
+      stringBuilder.append(String.format("keystore: %s, ", getKeyStore()));
+      stringBuilder.append("keystore_password: *****, ");
 
-      stringBuilder.append(String.format("truststore: %1$s, ", getTrustStore()));
-      if(null!=environment && environment.isDevelopment())
-        stringBuilder.append(String.format("truststore_password: %1$s, ", getTrustStorePassword()));
-      else
-        stringBuilder.append("truststore_password: *****, ");
+      stringBuilder.append(String.format("truststore: %s, ", getTrustStore()));
+      stringBuilder.append("truststore_password: *****, ");
 
-      stringBuilder.append(String.format("certificate_alias: %1$s, ",
+      stringBuilder.append(String.format("certificate_alias: %s, ",
         String.valueOf(getCertificateAlias())
       ));
 

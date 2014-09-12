@@ -45,6 +45,10 @@ public class CustomGuiceContainer extends GuiceContainer
     );
 
     resourceConfig.getMediaTypeMappings().put(
+      MediaType.TEXT_HTML_TYPE.getSubtype(), MediaType.TEXT_HTML_TYPE
+    );
+
+    resourceConfig.getMediaTypeMappings().put(
       MediaType.TEXT_XML_TYPE.getSubtype(), MediaType.TEXT_XML_TYPE
     );
 

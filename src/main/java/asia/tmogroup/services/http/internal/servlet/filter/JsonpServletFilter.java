@@ -10,7 +10,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang.StringUtils;
 
 
 /**
@@ -55,25 +54,20 @@ public class JsonpServletFilter implements Filter
       final ServletResponse servletResponse, final FilterChain filterChain)
     throws IOException, ServletException
   {
-    String callback=StringUtils.substringAfterLast(
-      ((HttpServletRequest)servletRequest).getQueryString(), "jsonp="
-    );
+    final String callback=((HttpServletRequest)servletRequest).getParameter("jsonp");
 
-    callback=StringUtils.substringBefore(callback, "&");
-
-    boolean jsonp=false;
-
-    if(null!=callback && !callback.isEmpty())
+    if(null==callback)
+    {
+      filterChain.doFilter(servletRequest, servletResponse);
+    }
+    else
     {
       servletResponse.getOutputStream().write(callback.concat("(").getBytes());
 
-      jsonp=true;
-    }
+      filterChain.doFilter(servletRequest, servletResponse);
 
-    filterChain.doFilter(servletRequest, servletResponse);
-
-    if(jsonp)
       servletResponse.getOutputStream().write(");".getBytes());
+    }
   }
 
   @Override

@@ -4,7 +4,6 @@ package net.evalcode.services.http.internal.servlet.container;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +26,7 @@ import net.evalcode.services.http.internal.servlet.ServletContainer;
 import net.evalcode.services.http.service.HttpService;
 import net.evalcode.services.http.service.HttpServiceServletModule;
 import net.evalcode.services.http.service.security.JaasIdentityService;
+import net.evalcode.services.http.service.security.JaasSecurityContext;
 import net.evalcode.services.http.service.xml.HttpConfiguration;
 import net.evalcode.services.http.service.xml.HttpConfiguration.Listener;
 import com.google.inject.Guice;
@@ -206,60 +206,64 @@ public class JettyServletContainer implements ServletContainer
     server.setConnectors(new Connector[] {});
     server.setHandler(contextHandlerContainer);
 
-    final Set<Listener> listeners=this.configuration.get();
+    final Listener listenerHttp=this.configuration.http();
+    final Listener listenerHttps=this.configuration.https();
 
-    for(final Listener listener : listeners)
-    {
-      if(!listener.isEnabled())
-        continue;
+    if(null!=listenerHttp)
+      server.addConnector(toSelectChannelConnector(listenerHttp, listenerHttps));
 
-      if(Listener.Scheme.HTTPS.equals(listener.getScheme()))
-        server.addConnector(toSslSelectChannelConnector(listener));
-      else
-        server.addConnector(toSelectChannelConnector(listener));
-    }
+    if(null!=listenerHttps)
+      server.addConnector(toSslSelectChannelConnector(listenerHttps, listenerHttp));
 
     initialized.set(true);
   }
 
-  private static SelectChannelConnector toSelectChannelConnector(final Listener listener)
+  private static SelectChannelConnector toSelectChannelConnector(final Listener listenerHttp,
+      final Listener listenerHttps)
   {
     final SelectChannelConnector selectChannelConnector=new SelectChannelConnector();
 
-    selectChannelConnector.setHost(listener.getHost());
-    selectChannelConnector.setPort(listener.getPort());
+    selectChannelConnector.setHost(listenerHttp.getHost());
+    selectChannelConnector.setPort(listenerHttp.getPort());
 
-    selectChannelConnector.setAcceptors(listener.getAcceptors());
+    selectChannelConnector.setAcceptors(listenerHttp.getAcceptors());
 
-    selectChannelConnector.setResolveNames(listener.isReverseLookupEnabled());
-    selectChannelConnector.setStatsOn(listener.isStatisticsEnabled());
-    selectChannelConnector.setUseDirectBuffers(listener.isDirectBuffersEnabled());
+    selectChannelConnector.setResolveNames(listenerHttp.isReverseLookupEnabled());
+    selectChannelConnector.setStatsOn(listenerHttp.isStatisticsEnabled());
+    selectChannelConnector.setUseDirectBuffers(listenerHttp.isDirectBuffersEnabled());
+
+    if(null!=listenerHttps)
+      selectChannelConnector.setConfidentialPort(listenerHttps.getPort());
 
     return selectChannelConnector;
   }
 
-  private static Connector toSslSelectChannelConnector(final Listener listener)
+  private static Connector toSslSelectChannelConnector(final Listener listenerHttps,
+      final Listener listenerHttp)
   {
     final SslSelectChannelConnector sslSelectChannelConnector=new SslSelectChannelConnector();
 
-    sslSelectChannelConnector.setHost(listener.getHost());
-    sslSelectChannelConnector.setPort(listener.getPort());
+    sslSelectChannelConnector.setHost(listenerHttps.getHost());
+    sslSelectChannelConnector.setPort(listenerHttps.getPort());
 
-    sslSelectChannelConnector.getSslContextFactory().setKeyStore(listener.getKeyStore());
+    sslSelectChannelConnector.getSslContextFactory().setKeyStore(listenerHttps.getKeyStore());
     sslSelectChannelConnector.getSslContextFactory()
-      .setKeyStorePassword(listener.getKeyStorePassword());
+      .setKeyStorePassword(listenerHttps.getKeyStorePassword());
 
-    sslSelectChannelConnector.getSslContextFactory().setTrustStore(listener.getTrustStore());
+    sslSelectChannelConnector.getSslContextFactory().setTrustStore(listenerHttps.getTrustStore());
     sslSelectChannelConnector.getSslContextFactory()
-      .setTrustStorePassword(listener.getTrustStorePassword());
+      .setTrustStorePassword(listenerHttps.getTrustStorePassword());
 
-    sslSelectChannelConnector.getSslContextFactory().setCertAlias(listener.getCertificateAlias());
+    sslSelectChannelConnector.getSslContextFactory().setCertAlias(listenerHttps.getCertificateAlias());
 
-    sslSelectChannelConnector.setAcceptors(listener.getAcceptors());
+    sslSelectChannelConnector.setAcceptors(listenerHttps.getAcceptors());
 
-    sslSelectChannelConnector.setResolveNames(listener.isReverseLookupEnabled());
-    sslSelectChannelConnector.setStatsOn(listener.isStatisticsEnabled());
-    sslSelectChannelConnector.setUseDirectBuffers(listener.isDirectBuffersEnabled());
+    sslSelectChannelConnector.setResolveNames(listenerHttps.isReverseLookupEnabled());
+    sslSelectChannelConnector.setStatsOn(listenerHttps.isStatisticsEnabled());
+    sslSelectChannelConnector.setUseDirectBuffers(listenerHttps.isDirectBuffersEnabled());
+
+    if(null!=listenerHttp)
+      sslSelectChannelConnector.setIntegralPort(listenerHttp.getPort());
 
     return sslSelectChannelConnector;
   }
@@ -289,6 +293,10 @@ public class JettyServletContainer implements ServletContainer
 
       final ConstraintSecurityHandler constraintSecurityHandler=new ConstraintSecurityHandler();
       constraintSecurityHandler.setLoginService(jaasLoginService);
+
+      servletContextHandler.setInitParameter(
+        JaasSecurityContext.INIT_PARAM_REALM, servletContextRealm
+      );
 
       servletContextHandler.setSecurityHandler(constraintSecurityHandler);
     }

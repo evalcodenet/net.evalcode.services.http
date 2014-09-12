@@ -10,18 +10,10 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import org.eclipse.jetty.http.security.Credential;
-import org.eclipse.jetty.plus.jaas.spi.AbstractLoginModule;
 import org.eclipse.jetty.plus.jaas.spi.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.evalcode.services.http.service.security.JaasSecurityContext.ServiceUserPrincipal;
-import net.evalcode.services.manager.service.cache.impl.ehcache.EhcacheCache;
-import net.evalcode.services.manager.service.cache.impl.ehcache.EhcacheCacheManagerFactory;
-import net.evalcode.services.manager.service.cache.spi.Cache;
-import com.google.common.collect.Lists;
 
 
 /**
@@ -29,18 +21,13 @@ import com.google.common.collect.Lists;
  *
  * @author evalcode.net
  */
-public class JaasTokenLoginModule extends AbstractLoginModule
+public class JaasTokenLoginModule extends JaasLoginModule
 {
   // PREDEFINED PROPERTIES
   static final Logger LOG=LoggerFactory.getLogger(JaasTokenLoginModule.class);
 
 
   // MEMBERS
-  // FIXME Bind service offered by net.evalcode.services.manager.
-  final CacheManager cacheManager=EhcacheCacheManagerFactory.get().getCacheManager();
-  // TODO Define/share region by security realm.
-  final Ehcache cache=cacheManager.getEhcache(JaasSecurityContext.STORAGE_REGION);
-
   final Map<String, String> config=new HashMap<>();
 
 
@@ -66,20 +53,13 @@ public class JaasTokenLoginModule extends AbstractLoginModule
     {
       getCallbackHandler().handle(new Callback[] {callbackName});
     }
-    catch(final UnsupportedCallbackException e)
+    catch(final UnsupportedCallbackException | IOException e)
     {
-      LOG.error(e.getMessage(), e);
-
-      throw new LoginException(e.getMessage());
-    }
-    catch(final IOException e)
-    {
-      LOG.error(e.getMessage(), e);
-
       throw new LoginException(e.getMessage());
     }
 
-    final Object result=getStorage().get(callbackName.getName());
+    final String region=config.get("cache");
+    final Object result=JaasSecurityContext.getStorage(region).get(callbackName.getName());
 
     if(null!=result)
     {
@@ -87,11 +67,11 @@ public class JaasTokenLoginModule extends AbstractLoginModule
       {
         final ServiceUserPrincipal serviceUserPrincipal=(ServiceUserPrincipal)result;
 
-        setCurrentUser(new JAASUserInfo(new UserInfo(
+        setCurrentUser(new ServiceUserInfo(
           serviceUserPrincipal.getName(),
-          Credential.getCredential(serviceUserPrincipal.getToken()),
-          Lists.newArrayList(serviceUserPrincipal.getRoles())
-        )));
+          serviceUserPrincipal.getToken(),
+          serviceUserPrincipal.getRoles()
+        ));
 
         setAuthenticated(true);
 
@@ -111,20 +91,5 @@ public class JaasTokenLoginModule extends AbstractLoginModule
   public UserInfo getUserInfo(final String user)
   {
     return null;
-  }
-
-
-  // IMPLEMENTATION
-  Cache<?> getStorage()
-  {
-    if(null==cache)
-    {
-      throw new RuntimeException(
-        "Unable to access storage backend. "+
-        "Please verify configuration of net.evalcode.services.cache."
-      );
-    }
-
-    return new EhcacheCache(cache);
   }
 }
