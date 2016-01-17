@@ -19,7 +19,7 @@ import net.evalcode.services.http.service.security.JaasSecurityContext.ServiceUs
 /**
  * JaasTokenLoginModule
  *
- * @author evalcode.net
+ * @author carsten.schipke@gmail.com
  */
 public class JaasTokenLoginModule extends JaasLoginModule
 {

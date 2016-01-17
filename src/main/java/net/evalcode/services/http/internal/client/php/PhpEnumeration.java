@@ -24,7 +24,7 @@ public class PhpEnumeration extends PhpClientClass
   static final Logger LOG=LoggerFactory.getLogger(PhpEnumeration.class);
 
   static final String RESOURCE_TEMPLATE_PATH=
-    "asia/tmogroup/services/http/internal/client/php/";
+    "net/evalcode/services/http/internal/client/php/";
   static final String RESOURCE_TEMPLATE="PhpEnumeration.php";
 
   static final String KEY_NAMESPACE="NAMESPACE";

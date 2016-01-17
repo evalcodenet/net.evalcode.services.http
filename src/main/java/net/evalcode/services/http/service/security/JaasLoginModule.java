@@ -17,14 +17,14 @@ import com.google.common.collect.Lists;
 /**
  * JaasLoginModule
  *
- * @author evalcode.net
+ * @author carsten.schipke@gmail.com
  */
 public abstract class JaasLoginModule extends AbstractLoginModule
 {
   /**
    * ServiceUserInfo
    *
-   * @author evalcode.net
+   * @author carsten.schipke@gmail.com
    */
   public class ServiceUserInfo extends JAASUserInfo
   {

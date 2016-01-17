@@ -49,7 +49,7 @@ public class WebApplicationClientGeneratorPhp extends WebApplicationClientGenera
 
   public static final String PHP_TYPE_DEFAULT="null";
   public static final String PHP_TYPE_COLLECTION="array";
-  public static final String PHP_TYPE_COLLECTION_DEFAULT="array()";
+  public static final String PHP_TYPE_COLLECTION_DEFAULT="[]";
 
   public static final Map<Class<?>, String> TYPE_TABLE_PRIMITIVES=new HashMap<Class<?>, String>() {{
       put(boolean.class, TYPE_CONVERSION_BOOL);

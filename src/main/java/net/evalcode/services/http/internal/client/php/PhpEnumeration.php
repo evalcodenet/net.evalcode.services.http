@@ -36,9 +36,9 @@ namespace %NAMESPACE%;
     /**
      * @var string[]
      */
-    private static $m_values=array(
+    private static $m_values=[
 %VALUES%
-    );
+    ];
     //--------------------------------------------------------------------------
   }
 ?>

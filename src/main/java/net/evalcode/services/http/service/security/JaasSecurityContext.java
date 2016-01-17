@@ -34,7 +34,7 @@ import com.google.common.collect.Sets;
 /**
  * JaasSecurityContext
  *
- * @author evalcode.net
+ * @author carsten.schipke@gmail.com
  */
 public class JaasSecurityContext implements SecurityContext
 {
@@ -138,7 +138,7 @@ public class JaasSecurityContext implements SecurityContext
   /**
    * Disabled
    *
-   * @author evalcode.net
+   * @author carsten.schipke@gmail.com
    */
   public static class Disabled extends JaasSecurityContext
   {
@@ -190,7 +190,7 @@ public class JaasSecurityContext implements SecurityContext
   /**
    * AuthenticationFilter
    *
-   * @author evalcode.net
+   * @author carsten.schipke@gmail.com
    */
   @Singleton
   public static class AuthenticationFilter implements Filter
@@ -273,7 +273,7 @@ public class JaasSecurityContext implements SecurityContext
   /**
    * ServiceUserPrincipal
    *
-   * @author evalcode.net
+   * @author carsten.schipke@gmail.com
    */
   public static class ServiceUserPrincipal implements Serializable, Principal
   {

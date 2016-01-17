@@ -18,7 +18,7 @@ import net.evalcode.services.http.service.security.JaasSecurityContext.ServiceUs
 /**
  * JaasIdentityService
  *
- * @author evalcode.net
+ * @author carsten.schipke@gmail.com
  */
 public class JaasIdentityService implements IdentityService
 {
